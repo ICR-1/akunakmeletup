@@ -1,0 +1,23 @@
+[
+  { "id": "moon", "name": "Bulan", "mvp": true, "gravity": 1.62, "solarIrradianceWm2": 1361, "deltaVKmS": 5.0, "budgetMusd": 400,
+    "palette": ["#c9ccd4", "#1b2340", "#ffffff"],
+    "objectives": [
+      { "id": "moon_regolith", "title": "Ambil sampel regolit di kawah", "required": true, "instrumentId": "sample_drill" },
+      { "id": "moon_panorama", "title": "Foto panorama lokasi pendaratan", "required": true, "instrumentId": "cam_pano" },
+      { "id": "moon_far_crater", "title": "Foto kawah jauh (lebih dari 250 m dari wahana)", "required": false, "bonus": true, "instrumentId": "cam_pano" },
+      { "id": "moon_weather", "title": "Pasang stasiun cuaca (lebih dari 250 m dari wahana)", "required": false, "bonus": true, "instrumentId": "weather_station" }
+    ],
+    "eventIds": ["ev_dust_on_panels", "ev_solar_flare", "ev_micrometeorite_rain"],
+    "minigameIds": ["photo_panorama", "precise_drill", "weather_connect"] },
+  { "id": "mars", "name": "Mars", "mvp": true, "gravity": 3.71, "solarIrradianceWm2": 590, "deltaVKmS": 6.0, "budgetMusd": 650,
+    "palette": ["#c1440e", "#e8a598", "#7a2e12"],
+    "objectives": [
+      { "id": "mars_rock", "title": "Analisis batuan", "required": true, "instrumentId": "spectrometer" },
+      { "id": "mars_seismo", "title": "Pasang seismometer", "required": true, "instrumentId": "seismometer" },
+      { "id": "mars_core", "title": "Inti bor dari batuan tua", "required": false, "bonus": true, "instrumentId": "sample_drill" },
+      { "id": "mars_delta_photo", "title": "Foto delta kuno (lebih dari 250 m dari wahana)", "required": false, "bonus": true, "instrumentId": "cam_pano" },
+      { "id": "mars_weather", "title": "Pasang stasiun cuaca (lebih dari 250 m dari wahana)", "required": false, "bonus": true, "instrumentId": "weather_station" }
+    ],
+    "eventIds": ["ev_dust_storm", "ev_dust_devil", "ev_solar_conjunction"],
+    "minigameIds": ["spectrum_match", "vibration_calibration", "precise_drill", "photo_panorama", "weather_connect"] }
+]

@@ -1,0 +1,18 @@
+[
+  { "id": "lander_s", "name": "Lander Kecil", "kind": "lander", "massKg": 400, "costMusd": 40, "stats": { "instrumentSlots": 4, "baseLoadW": 40 } },
+  { "id": "lander_m", "name": "Lander Sedang", "kind": "lander", "massKg": 700, "costMusd": 70, "stats": { "instrumentSlots": 6, "baseLoadW": 55 } },
+  { "id": "tank_s", "name": "Tangki Kecil", "kind": "tank", "massKg": 80, "costMusd": 10, "stats": { "fuelKg": 800 } },
+  { "id": "tank_m", "name": "Tangki Sedang", "kind": "tank", "massKg": 160, "costMusd": 20, "stats": { "fuelKg": 1800 } },
+  { "id": "tank_l", "name": "Tangki Besar", "kind": "tank", "massKg": 300, "costMusd": 35, "stats": { "fuelKg": 3500 } },
+  { "id": "eng_basic", "name": "Mesin Dasar", "kind": "engine", "massKg": 120, "costMusd": 15, "stats": { "ispS": 320, "thrustKn": 60 } },
+  { "id": "eng_eff", "name": "Mesin Efisien", "kind": "engine", "massKg": 180, "costMusd": 30, "stats": { "ispS": 450, "thrustKn": 40 } },
+  { "id": "solar_s", "name": "Panel Surya Kecil", "kind": "solar", "massKg": 20, "costMusd": 5, "stats": { "areaM2": 2, "efficiency": 0.28 } },
+  { "id": "solar_m", "name": "Panel Surya Sedang", "kind": "solar", "massKg": 35, "costMusd": 9, "stats": { "areaM2": 4, "efficiency": 0.28 } },
+  { "id": "battery_s", "name": "Baterai Kecil", "kind": "battery", "massKg": 25, "costMusd": 8, "stats": { "capacityWh": 400 } },
+  { "id": "battery_m", "name": "Baterai Sedang", "kind": "battery", "massKg": 55, "costMusd": 16, "stats": { "capacityWh": 1000 } },
+  { "id": "rtg", "name": "RTG", "kind": "rtg", "massKg": 45, "costMusd": 60, "stats": { "powerW": 120 } },
+  { "id": "ant_lga", "name": "Antena Gain Rendah", "kind": "antenna", "massKg": 5, "costMusd": 3, "stats": { "rate": 1 } },
+  { "id": "ant_hga", "name": "Antena Gain Tinggi", "kind": "antenna", "massKg": 25, "costMusd": 18, "stats": { "rate": 8 } },
+  { "id": "rover_lc", "name": "Lunar Cruiser", "kind": "rover", "massKg": 260, "costMusd": 45, "stats": { "speedMs": 14, "driveW": 150 } },
+  { "id": "relay_link", "name": "Tautan Relay", "kind": "antenna", "massKg": 0, "costMusd": 60, "stats": { "rate": 5 } }
+]

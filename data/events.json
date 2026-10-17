@@ -1,0 +1,56 @@
+[
+  { "id": "ev_micrometeor", "destinationId": "any", "phase": "flight", "weight": 1, "title": "Hujan micrometeoroid",
+    "description": "Butiran micrometeoroid melintas menuju wahana.",
+    "choices": [
+      { "label": "Putar badan wahana", "effects": [{ "target": "deltaVms", "delta": -40 }], "failChance": 0, "failEffects": [] },
+      { "label": "Terus melaju", "effects": [], "failChance": 0.4, "failEffects": [{ "target": "deltaVms", "delta": -90 }] }
+    ] },
+  { "id": "ev_engine_glitch", "destinationId": "any", "phase": "flight", "weight": 1, "title": "Gangguan mesin",
+    "description": "Mesin utama berfluktuasi.",
+    "choices": [
+      { "label": "Restart urutan", "effects": [], "failChance": 0.3, "failEffects": [{ "target": "deltaVms", "delta": -60 }] },
+      { "label": "Matikan sementara", "effects": [{ "target": "deltaVms", "delta": -20 }], "failChance": 0, "failEffects": [] }
+    ] },
+  { "id": "ev_stage_clamp", "destinationId": "any", "phase": "flight", "weight": 1, "title": "Penjepit tahap macet",
+    "description": "Penjepit pemisah tahap tidak mau terbuka.",
+    "choices": [
+      { "label": "Urutan tombol cepat", "effects": [], "failChance": 0.3, "failEffects": [{ "target": "deltaVms", "delta": -50 }] },
+      { "label": "Lepas paksa dengan pyro cadangan", "effects": [{ "target": "deltaVms", "delta": -30 }], "failChance": 0, "failEffects": [] }
+    ] },
+  { "id": "ev_dust_on_panels", "destinationId": "moon", "phase": "surface", "weight": 2, "title": "Debu statis di panel surya",
+    "description": "Debu menutupi panel surya wahana.",
+    "choices": [
+      { "label": "Bersihkan panel (minigame gosok)", "effects": [{ "target": "timeSec", "delta": 10 }, { "target": "suitBattery", "delta": -5 }], "failChance": 0, "failEffects": [{ "target": "vehiclePower", "delta": -10 }], "minigameId": "clean_panel" },
+      { "label": "Abaikan", "effects": [{ "target": "vehiclePower", "delta": -20 }], "failChance": 0, "failEffects": [] }
+    ] },
+  { "id": "ev_solar_flare", "destinationId": "moon", "phase": "surface", "weight": 1, "title": "Semburan surya",
+    "description": "Semburan Matahari mengganggu daya dan sinyal.",
+    "choices": [
+      { "label": "Berlindung di wahana", "effects": [{ "target": "timeSec", "delta": 30 }], "failChance": 0, "failEffects": [] },
+      { "label": "Lanjut bekerja", "effects": [], "failChance": 0.5, "failEffects": [{ "target": "suitBattery", "delta": -25 }, { "target": "signal", "delta": -0.3 }] }
+    ] },
+  { "id": "ev_micrometeorite_rain", "destinationId": "moon", "phase": "surface", "weight": 1, "title": "Hujan micrometeorit",
+    "description": "Micrometeorit berjatuhan di sekitar astronot.",
+    "choices": [
+      { "label": "Berlindung di balik batu", "effects": [{ "target": "timeSec", "delta": 20 }], "failChance": 0, "failEffects": [] },
+      { "label": "Lanjut berjalan", "effects": [], "failChance": 0.3, "failEffects": [{ "target": "oxygen", "delta": -20 }] }
+    ] },
+  { "id": "ev_dust_storm", "destinationId": "mars", "phase": "surface", "weight": 2, "title": "Badai debu",
+    "description": "Daya dan visibilitas turun karena badai debu.",
+    "choices": [
+      { "label": "Berlindung", "effects": [{ "target": "timeSec", "delta": 45 }, { "target": "vehiclePower", "delta": -5 }], "failChance": 0, "failEffects": [] },
+      { "label": "Lanjut", "effects": [], "failChance": 0.5, "failEffects": [{ "target": "oxygen", "delta": -25 }, { "target": "signal", "delta": -0.4 }] }
+    ] },
+  { "id": "ev_dust_devil", "destinationId": "mars", "phase": "surface", "weight": 1, "title": "Dust devil melintas",
+    "description": "Pusaran debu bergerak ke arah peralatan.",
+    "choices": [
+      { "label": "Menghindar ke samping", "effects": [{ "target": "oxygen", "delta": -5 }], "failChance": 0, "failEffects": [] },
+      { "label": "Lindungi alat", "effects": [], "failChance": 0.3, "failEffects": [{ "target": "vehiclePower", "delta": -10 }, { "target": "score", "delta": -3 }] }
+    ] },
+  { "id": "ev_solar_conjunction", "destinationId": "mars", "phase": "surface", "weight": 1, "title": "Konjungsi Matahari",
+    "description": "Sinyal ke Bumi terputus oleh Matahari.",
+    "choices": [
+      { "label": "Tunggu pulih", "effects": [{ "target": "timeSec", "delta": 40 }], "failChance": 0, "failEffects": [] },
+      { "label": "Tetap uplink", "effects": [], "failChance": 0.6, "failEffects": [{ "target": "signal", "delta": -0.5 }] }
+    ] }
+]

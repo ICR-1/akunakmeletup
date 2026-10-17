@@ -1,0 +1,8 @@
+[
+  { "id": "cam_pano", "name": "Kamera Panorama", "massKg": 8, "powerW": 15, "costMusd": 15, "dataUnits": 20, "minigameId": "photo_panorama" },
+  { "id": "weather_station", "name": "Stasiun Cuaca", "massKg": 10, "powerW": 8, "costMusd": 20, "dataUnits": 10, "minigameId": "weather_connect" },
+  { "id": "seismometer", "name": "Seismometer", "massKg": 12, "powerW": 10, "costMusd": 25, "dataUnits": 15, "minigameId": "vibration_calibration" },
+  { "id": "spectrometer", "name": "Spektrometer", "massKg": 20, "powerW": 30, "costMusd": 35, "dataUnits": 30, "minigameId": "spectrum_match" },
+  { "id": "sample_drill", "name": "Bor Sampel", "massKg": 45, "powerW": 60, "costMusd": 55, "dataUnits": 40, "minigameId": "precise_drill" },
+  { "id": "ice_radar", "name": "Radar Penembus Es", "massKg": 60, "powerW": 90, "costMusd": 80, "dataUnits": 60, "minigameId": "radar_scan" }
+]

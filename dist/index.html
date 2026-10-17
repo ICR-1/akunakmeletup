@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASTRA: Space Mission Architect</title>
+    <link rel="icon" href="data:," />
+    <style>#loading{z-index:1000;color:#e8f1ff;background:radial-gradient(at 50% 40%,#12203a 0%,#070b16 70%);flex-direction:column;justify-content:center;align-items:center;gap:14px;font-family:ui-monospace,SF Mono,Menlo,Consolas,monospace;transition:opacity .5s;display:flex;position:fixed;inset:0}#loading.hide{opacity:0;pointer-events:none}#loading .loading-mark{border:3px solid #4fd1ff;border-top-color:#0000;border-radius:50%;width:64px;height:64px;animation:1s linear infinite loading-spin}#loading h1{letter-spacing:.18em;text-transform:uppercase;margin:6px 0 0;font-size:22px}#loading p{color:#9fb4d6;text-align:center;margin:0;padding:0 16px;font-size:13px}#loading .loading-bar{background:#0a1324;border:1px solid #2c4a73;border-radius:4px;width:min(420px,80vw);height:8px;overflow:hidden}#loading .loading-fill{background:linear-gradient(90deg,#4fd1ff,#5dff9b);width:0%;height:100%;transition:width .15s ease-out}#loading .loading-step{color:#7f9bc4;min-height:1.4em;font-size:12px}@keyframes loading-spin{to{transform:rotate(360deg)}}</style>
+    <script type="module" crossorigin src="./assets/index-BeLePK-U.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Drw49dtA.css">
+  </head>
+  <body>
+    <div id="loading" role="status" aria-live="polite">
+      <div class="loading-mark"></div>
+      <h1>Memuat ASTRA</h1>
+      <p>Menyiapkan semua bahan misi sebelum peluncuran</p>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+      <div class="loading-step">0%</div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+    <div id="overlay">
+      <div id="scene-label"></div>
+      <div id="scene-hint"></div>
+    </div>
+  </body>
+</html>

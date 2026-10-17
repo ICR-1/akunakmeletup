@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASTRA: Space Mission Architect</title>
+    <link rel="icon" href="data:," />
+    <style>
+      /* Layar memuat: gaya sebaris agar tampil seketika sebelum skrip dan stylesheet game termuat. */
+      #loading { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; background: radial-gradient(ellipse at 50% 40%, #12203a 0%, #070b16 70%); color: #e8f1ff; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; transition: opacity 0.5s ease; }
+      #loading.hide { opacity: 0; pointer-events: none; }
+      #loading .loading-mark { width: 64px; height: 64px; border: 3px solid #4fd1ff; border-radius: 50%; border-top-color: transparent; animation: loading-spin 1s linear infinite; }
+      #loading h1 { margin: 6px 0 0; font-size: 22px; letter-spacing: 0.18em; text-transform: uppercase; }
+      #loading p { margin: 0; font-size: 13px; color: #9fb4d6; text-align: center; padding: 0 16px; }
+      #loading .loading-bar { width: min(420px, 80vw); height: 8px; border: 1px solid #2c4a73; border-radius: 4px; overflow: hidden; background: #0a1324; }
+      #loading .loading-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #4fd1ff, #5dff9b); transition: width 0.15s ease-out; }
+      #loading .loading-step { min-height: 1.4em; font-size: 12px; color: #7f9bc4; }
+      @keyframes loading-spin { to { transform: rotate(360deg); } }
+    </style>
+  </head>
+  <body>
+    <div id="loading" role="status" aria-live="polite">
+      <div class="loading-mark"></div>
+      <h1>Memuat ASTRA</h1>
+      <p>Menyiapkan semua bahan misi sebelum peluncuran</p>
+      <div class="loading-bar"><div class="loading-fill"></div></div>
+      <div class="loading-step">0%</div>
+    </div>
+    <canvas id="game-canvas"></canvas>
+    <div id="overlay">
+      <div id="scene-label"></div>
+      <div id="scene-hint"></div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

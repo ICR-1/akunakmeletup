@@ -1,0 +1,20 @@
+[
+  { "id": "pandu_1", "name": "Pandu-1", "payloadToLeoKg": 4000, "costMusd": 80, "handling": 1.2,
+    "stages": [
+      { "id": "pandu_1_s1", "name": "Tahap Bawah", "burnSec": 30 },
+      { "id": "pandu_1_s2", "name": "Fairing + Transfer", "burnSec": 40 }
+    ] },
+  { "id": "rajawali_2", "name": "Rajawali-2", "payloadToLeoKg": 12000, "costMusd": 180, "handling": 1.0,
+    "stages": [
+      { "id": "rajawali_2_s1", "name": "Tahap Bawah", "burnSec": 25 },
+      { "id": "rajawali_2_s2", "name": "Tahap Atas", "burnSec": 30 },
+      { "id": "rajawali_2_s3", "name": "Fairing + Transfer", "burnSec": 40 }
+    ] },
+  { "id": "garuda_heavy", "name": "Garuda Heavy", "payloadToLeoKg": 28000, "costMusd": 340, "handling": 0.7,
+    "stages": [
+      { "id": "garuda_heavy_s1", "name": "Side Booster", "burnSec": 20 },
+      { "id": "garuda_heavy_s2", "name": "Core Bawah", "burnSec": 25 },
+      { "id": "garuda_heavy_s3", "name": "Tahap Atas", "burnSec": 30 },
+      { "id": "garuda_heavy_s4", "name": "Fairing + Transfer", "burnSec": 40 }
+    ] }
+]
