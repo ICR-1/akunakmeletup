@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { COLLISION, DAY_SEC, EVENT_SCENE, EVENTS, MINIGAME, NIGHT_SEC, ROVER, SURFACE, SURFACE_TIME_LIMIT_SEC, UPLINK_RADIUS_M, VISUAL } from '../core/constants';
+import { COLLISION, DAY_SEC, EARTH_SPIN_HOURS, EVENT_SCENE, GAME_HOUR_SEC, EVENTS, MINIGAME, NIGHT_SEC, ROVER, SURFACE, SURFACE_TIME_LIMIT_SEC, UPLINK_RADIUS_M, VISUAL } from '../core/constants';
 import { CameraShake } from '../core/cameraShake';
 import { audio } from '../core/audio';
 import type { GameContext } from '../core/context';
@@ -62,7 +62,10 @@ const END_DELAY_SEC = 2.4;
 const ROCK_COUNT = 420;
 const HUB_ROCK_CLEAR_M = 14;
 const DUSK_SEC = 25;
-const EARTH_SKY_RADIUS = 70;
+const EARTH_SKY_RADIUS = 90;
+/** Arah Bumi di langit Bulan (terkunci pasang surut, hampir tidak bergerak): offset dari kamera, seperti bintang. */
+const EARTH_SKY_OFFSET = new THREE.Vector3(-700, 330, -1200);
+const EARTH_SPIN_RATE = (Math.PI * 2) / (EARTH_SPIN_HOURS * GAME_HOUR_SEC);
 const DAWN_SEC = 10;
 const SUN_MIN_ELEV = 0.17;
 const SUN_ELEV_RANGE = 1.05;
@@ -107,6 +110,7 @@ export class SurfaceScene extends BaseScene {
   private astronaut: AstronautRig | null = null;
   private stars: THREE.Points | null = null;
   private earth: PlanetObject | null = null;
+  private earthSpinT = 0;
   private pois: Poi[] = [];
   private scanFx: ScanFx[] = [];
   private readonly hemi = new THREE.HemisphereLight(0xbcd2ff, 0x2a2d36, 1);
@@ -202,6 +206,7 @@ export class SurfaceScene extends BaseScene {
     const params = new URLSearchParams(import.meta.env.DEV ? window.location.search : '');
     const startT = Number(params.get('time'));
     if (startT > 0) this.state = { ...this.state, timeSec: startT };
+    this.earthSpinT = this.state.timeSec;
 
     const style = terrainStyle(dest.id);
     applyTerrainTextures(dest.id === 'mars' ? 'mars' : 'moon', isHigh());
@@ -295,7 +300,7 @@ export class SurfaceScene extends BaseScene {
     this.scene.add(this.stars);
     if (dest.id !== 'mars') {
       this.earth = createPlanet('earth', EARTH_SKY_RADIUS, { segments: 32, atmosphere: ATMOSPHERES.earth ?? null });
-      this.earth.root.position.set(-700, 520, -1200);
+      this.earth.root.position.copy(EARTH_SKY_OFFSET);
       this.scene.add(this.earth.root);
     }
     this.setupSky(dest.id, dest.palette);
@@ -1159,7 +1164,13 @@ export class SurfaceScene extends BaseScene {
       this.sunObj.update(this.clock);
       this.updateFlare(dt);
     }
-    this.earth?.spin(dt, 0.02);
+    if (this.earth) {
+      // Bumi tetap di arah yang sama di langit (jauh sekali, jadi ikut kamera) dan berputar mengikuti waktu permukaan,
+      // sehingga berhenti saat waktu berhenti dan selaras dengan siklus Matahari.
+      this.earth.root.position.copy(this.camPos).add(EARTH_SKY_OFFSET);
+      this.earth.spin(this.state.timeSec - this.earthSpinT, EARTH_SPIN_RATE);
+      this.earthSpinT = this.state.timeSec;
+    }
 
     const dist = this.distanceFromHub();
     const signal = currentSignal(this.state, dist);

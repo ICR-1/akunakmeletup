@@ -12,9 +12,9 @@ const THIGH = 0.38;
 const SHIN = 0.36;
 const POSE_FOLLOW = 12;
 /** Antena di ransel: posisi (badan lokal), panjang, kemiringan ke belakang, dan goyangan saat bergerak. */
-const PACK_TOP_Y = 0.6;
-const PACK_Z = -0.27;
-const ANTENNA_X = -0.15;
+const PACK_TOP_Y = 0.66;
+const PACK_Z = -0.34;
+const ANTENNA_X = -0.19;
 const ANTENNA_LENGTH = 0.7;
 const ANTENNA_LEAN = -0.15;
 const ANTENNA_SWAY = 0.1;
@@ -85,26 +85,26 @@ export class AstronautRig {
 
   private buildTorso(): void {
     const b = this.body;
-    b.add(part(jitter(boxGeometry(0.52, 0.58, 0.32), 11, 0.012), C.cream, [0, 0.33, 0]));
-    b.add(box(0.15, 0.15, 0.03, C.creamLight, [0, 0.4, 0.17]));
-    b.add(box(0.56, 0.09, 0.35, C.dark, [0, 0.04, 0]));
-    b.add(box(0.1, 0.1, 0.06, C.gray, [0.2, 0.04, 0.2]));
-    for (const x of [-0.18, 0.18]) b.add(box(0.05, 0.5, 0.03, C.dark, [x, 0.34, 0.17], [0, 0, x > 0 ? -0.08 : 0.08]));
-    b.add(box(0.4, 0.05, 0.03, C.dark, [0, 0.27, 0.17]));
-    b.add(part(new THREE.CylinderGeometry(0.25, 0.29, 0.07, seg(8)), C.dark, [0, 0.65, 0]));
+    b.add(part(jitter(boxGeometry(0.66, 0.64, 0.44), 11, 0.012), C.cream, [0, 0.36, 0]));
+    b.add(box(0.19, 0.19, 0.04, C.creamLight, [0, 0.43, 0.23]));
+    b.add(box(0.72, 0.11, 0.48, C.dark, [0, 0.04, 0]));
+    b.add(box(0.13, 0.12, 0.07, C.gray, [0.26, 0.04, 0.27]));
+    for (const x of [-0.23, 0.23]) b.add(box(0.06, 0.54, 0.04, C.dark, [x, 0.37, 0.23], [0, 0, x > 0 ? -0.08 : 0.08]));
+    b.add(box(0.52, 0.06, 0.04, C.dark, [0, 0.3, 0.23]));
+    b.add(part(new THREE.CylinderGeometry(0.3, 0.35, 0.08, seg(8)), C.dark, [0, 0.7, 0]));
   }
 
   private buildHead(): void {
     const head = new THREE.Group();
-    head.position.y = 0.97;
-    const helmet = part(jitter(new THREE.IcosahedronGeometry(0.3, ico(1)), 5, 0.012), C.cream);
+    head.position.y = 1.04;
+    const helmet = part(jitter(new THREE.IcosahedronGeometry(0.36, ico(1)), 5, 0.012), C.cream);
     helmet.scale.set(1, 1.02, 1.05);
     head.add(helmet);
-    const visor = part(new THREE.SphereGeometry(0.27, seg(7), seg(5)), C.visor, [0, -0.01, 0.2], [0, 0, 0], visorMaterial);
+    const visor = part(new THREE.SphereGeometry(0.32, seg(7), seg(5)), C.visor, [0, -0.01, 0.24], [0, 0, 0], visorMaterial);
     visor.scale.set(0.95, 0.78, 0.62);
     head.add(visor);
     // Senter di sisi kanan helm menghadap ke depan: rumah, lensa bercahaya, SpotLight, dan kerucut sorot
-    const lampPos: [number, number, number] = [0.22, 0.2, 0.22];
+    const lampPos: [number, number, number] = [0.27, 0.23, 0.27];
     const housing = part(new THREE.CylinderGeometry(0.06, 0.07, 0.16, seg(8)), C.dark, lampPos, [Math.PI / 2, 0, 0]);
     head.add(housing);
     const lens = new THREE.Mesh(new THREE.CircleGeometry(0.052, seg(10)), this.lensMat);
@@ -128,19 +128,19 @@ export class AstronautRig {
       this.beam.visible = false;
       head.add(this.beam);
     }
-    for (const x of [-0.31, 0.31]) head.add(part(new THREE.CylinderGeometry(0.06, 0.06, 0.07, seg(6)), C.gray, [x, 0, 0], [0, 0, Math.PI / 2]));
+    for (const x of [-0.37, 0.37]) head.add(part(new THREE.CylinderGeometry(0.075, 0.075, 0.08, seg(6)), C.gray, [x, 0, 0], [0, 0, Math.PI / 2]));
     this.body.add(head);
   }
 
   private buildBackpack(): THREE.Mesh {
     const b = this.body;
-    b.add(box(0.44, 0.52, 0.22, C.dark, [0, 0.34, -0.27]));
-    for (const x of [-0.07, 0.07]) {
-      b.add(part(new THREE.CylinderGeometry(0.045, 0.045, 0.3, seg(6)), C.gray, [x, 0.36, -0.39]));
-      b.add(part(new THREE.ConeGeometry(0.045, 0.08, seg(6)), C.gray, [x, 0.2, -0.39], [Math.PI, 0, 0]));
+    b.add(box(0.58, 0.62, 0.3, C.dark, [0, 0.36, -0.34]));
+    for (const x of [-0.09, 0.09]) {
+      b.add(part(new THREE.CylinderGeometry(0.06, 0.06, 0.38, seg(6)), C.gray, [x, 0.38, -0.51]));
+      b.add(part(new THREE.ConeGeometry(0.06, 0.1, seg(6)), C.gray, [x, 0.19, -0.51], [Math.PI, 0, 0]));
     }
-    b.add(box(0.12, 0.1, 0.02, C.darker, [-0.13, 0.5, -0.385]));
-    b.add(box(0.12, 0.1, 0.02, C.darker, [0.13, 0.22, -0.385]));
+    b.add(box(0.15, 0.12, 0.02, C.darker, [-0.17, 0.53, -0.5]));
+    b.add(box(0.15, 0.12, 0.02, C.darker, [0.17, 0.2, -0.5]));
     // Antena di atas ransel (bukan di helm): dudukan, tangkai ramping condong ke belakang, dan bola ujung.
     // Pivot di dudukan sehingga tangkai bisa bergoyang halus saat astronot bergerak.
     b.add(box(0.1, 0.05, 0.1, C.dark, [ANTENNA_X, PACK_TOP_Y + 0.02, PACK_Z]));
@@ -150,38 +150,38 @@ export class AstronautRig {
     this.antenna.add(part(new THREE.SphereGeometry(0.03, seg(6), seg(4)), C.orange, [0, ANTENNA_LENGTH, 0]));
     b.add(this.antenna);
     const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.04, 0.02), this.indicatorMat);
-    lamp.position.set(0.14, 0.52, -0.385);
+    lamp.position.set(0.18, 0.55, -0.5);
     b.add(lamp);
     return lamp;
   }
 
   private buildArm(pivot: THREE.Group, side: -1 | 1): void {
-    pivot.position.set(side * 0.35, 0.58, 0);
-    pivot.add(part(new THREE.CylinderGeometry(0.085, 0.075, 0.3, seg(6)), C.cream, [0, -0.15, 0]));
-    pivot.add(part(new THREE.CylinderGeometry(0.09, 0.09, 0.05, seg(6)), C.orange, [0, -0.1, 0]));
-    pivot.add(part(new THREE.SphereGeometry(0.095, seg(5), seg(4)), C.cream, [0, 0, 0]));
+    pivot.position.set(side * 0.44, 0.62, 0);
+    pivot.add(part(new THREE.CylinderGeometry(0.12, 0.105, 0.3, seg(6)), C.cream, [0, -0.15, 0]));
+    pivot.add(part(new THREE.CylinderGeometry(0.125, 0.125, 0.05, seg(6)), C.orange, [0, -0.1, 0]));
+    pivot.add(part(new THREE.SphereGeometry(0.135, seg(5), seg(4)), C.cream, [0, 0, 0]));
     const elbow = new THREE.Group();
     elbow.position.y = -0.3;
     elbow.rotation.x = -0.25;
-    elbow.add(part(new THREE.CylinderGeometry(0.07, 0.06, 0.28, seg(6)), C.cream, [0, -0.14, 0]));
-    elbow.add(part(new THREE.CylinderGeometry(0.075, 0.075, 0.04, seg(6)), C.gray, [0, -0.25, 0]));
-    elbow.add(box(0.12, 0.14, 0.12, C.dark, [0, -0.34, 0]));
-    elbow.add(box(0.04, 0.08, 0.06, C.dark, [side * -0.07, -0.32, 0.03]));
+    elbow.add(part(new THREE.CylinderGeometry(0.1, 0.088, 0.28, seg(6)), C.cream, [0, -0.14, 0]));
+    elbow.add(part(new THREE.CylinderGeometry(0.105, 0.105, 0.045, seg(6)), C.gray, [0, -0.25, 0]));
+    elbow.add(box(0.17, 0.19, 0.17, C.dark, [0, -0.35, 0]));
+    elbow.add(box(0.05, 0.1, 0.08, C.dark, [side * -0.1, -0.33, 0.04]));
     pivot.add(elbow);
     this.body.add(pivot);
   }
 
   private buildLeg(pivot: THREE.Group, knee: THREE.Group, ankle: THREE.Group, side: -1 | 1): void {
-    pivot.position.set(side * 0.13, HIP_Y, 0);
-    pivot.add(part(new THREE.CylinderGeometry(0.11, 0.09, THIGH, seg(6)), C.cream, [0, -THIGH / 2, 0]));
-    pivot.add(part(new THREE.CylinderGeometry(0.115, 0.115, 0.04, seg(6)), C.dark, [0, -0.08, 0]));
+    pivot.position.set(side * 0.19, HIP_Y, 0);
+    pivot.add(part(new THREE.CylinderGeometry(0.17, 0.145, THIGH, seg(6)), C.cream, [0, -THIGH / 2, 0]));
+    pivot.add(part(new THREE.CylinderGeometry(0.175, 0.175, 0.045, seg(6)), C.dark, [0, -0.08, 0]));
     knee.position.y = -THIGH;
-    knee.add(box(0.17, 0.13, 0.08, C.orange, [0, 0.0, 0.08]));
-    knee.add(part(new THREE.CylinderGeometry(0.09, 0.085, SHIN, seg(6)), C.cream, [0, -SHIN / 2, 0]));
-    knee.add(part(new THREE.CylinderGeometry(0.095, 0.095, 0.04, seg(6)), C.orange, [0, -SHIN + 0.08, 0]));
+    knee.add(box(0.22, 0.16, 0.1, C.orange, [0, 0.0, 0.11]));
+    knee.add(part(new THREE.CylinderGeometry(0.145, 0.13, SHIN, seg(6)), C.cream, [0, -SHIN / 2, 0]));
+    knee.add(part(new THREE.CylinderGeometry(0.15, 0.15, 0.045, seg(6)), C.orange, [0, -SHIN + 0.08, 0]));
     // Sepatu di sendi pergelangan sendiri agar telapak bisa tetap datar saat jongkok.
     ankle.position.y = -SHIN;
-    ankle.add(box(0.17, 0.1, 0.3, C.dark, [0, 0, 0.05]));
+    ankle.add(box(0.25, 0.13, 0.36, C.dark, [0, 0.015, 0.06]));
     knee.add(ankle);
     pivot.add(knee);
     this.root.add(pivot);

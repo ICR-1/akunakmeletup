@@ -7,6 +7,7 @@ import { createRng, rngRange, type Rng } from '../core/rng';
 import { pickFlightEvent, rollChoice } from '../events/eventSystem';
 import { createFlame, disposeFlame, ParticleField, setFlame } from '../gen/effects';
 import { buildLander } from '../gen/lander';
+import { SpaceDust } from '../gen/spaceDust';
 import { disposeTree } from '../gen/mesh';
 import { departureProgress, destScale, earthScale } from '../rules/journey';
 import { Explosion, stepBallistic } from '../gen/explosion';
@@ -50,7 +51,7 @@ const DEST_SPIN = 0.03;
 const DEST_SEGMENTS = 64;
 const GROUND_DROP = 4000;
 /** Perpindahan Bumi (x, y, z) saat transfer selesai; z negatif = menjauh dari kamera. */
-const EARTH_DEPART_OFFSET: [number, number, number] = [-3200, 1300, -1800];
+const EARTH_DEPART_OFFSET: [number, number, number] = [260, 760, -2970];
 /** Eksponen kurva naik: kecil di awal agar lepas landas terasa berat lalu makin cepat. */
 const GROUND_DROP_EXP = 1.6;
 const DEST_RADIUS = 420;
@@ -71,7 +72,21 @@ const SMOKE_RATE = 1;
 const BOOSTER_FLAME_SCALE = 0.8;
 const LIGHT_LAUNCH = { hemi: 1.1, sun: 2.6 } as const;
 const LIGHT_LANDING = { hemi: 0.55, sun: 1.7 } as const;
-const DEST_BODY_POS: [number, number, number] = [560, 70, -1900];
+/**
+ * Planet tujuan berada di arah +x (arah hidung roket saat sudah mendatar), sedikit ke atas dan ke depan kamera
+ * (kamera menengok ke arah itu lewat `CAM_HEADING_DEG`) sehingga roket tampak meluncur menuju planet.
+ */
+const DEST_BODY_POS: [number, number, number] = [1800, 350, -320];
+/** Kamera bergeser ke belakang-samping roket sebesar sudut ini agar hidung roket yang mendatar menghadap ke planet di depan. */
+const CAM_HEADING_DEG = 40;
+const CAM_HEADING_DIST_BOOST = 0.3;
+/** Kecepatan aliran debu antariksa (satuan/detik) yang memberi kesan roket maju. */
+const DUST_FLOW = { launch: 38, orbit: 8, transfer: 55 } as const;
+const DUST_OPACITY = 0.85;
+/** Satu satuan roket = ini kali satuan scene pendaratan (lander di fairing 0,6 menjadi lander dunia 2,6). */
+const ROCKET_TO_LANDING = 1 / LAUNCH_WORLD_SCALE;
+/** Lama lander (setelah tahap transfer terlepas) berputar tegak, mendekat ke titik pendaratan, dan mencapai ukuran akhir. */
+const LANDER_INTRO_SEC = 2.4;
 const SHAKE_THRUST = 0.35;
 const SHAKE_LANDING = 0.25;
 const SHAKE_LANDING_ALT_M = 80;
@@ -104,6 +119,8 @@ export class FlightScene extends BaseScene {
   private readonly pivot = new THREE.Group();
   private mountedLander: THREE.Group | null = null;
   private landingLander: THREE.Group | null = null;
+  /** Peralihan mulus dari lander di dalam roket ke lander pendaratan: pose awal dan ukuran awal (satuan scene pendaratan). */
+  private landerIntro: { t: number; q0: THREE.Quaternion; p0: THREE.Vector3; s0: number } | null = null;
   private flame: THREE.Group | null = null;
   private landingFlame: THREE.Group | null = null;
   private flameHost = -1;
@@ -117,6 +134,7 @@ export class FlightScene extends BaseScene {
   private earth: PlanetObject | null = null;
   private destBody: PlanetObject | null = null;
   private terrain: Terrain | null = null;
+  private spaceDust: SpaceDust | null = null;
   private stars: THREE.Points | null = null;
   private smoke: ParticleField | null = null;
   private dust: ParticleField | null = null;
@@ -161,6 +179,8 @@ export class FlightScene extends BaseScene {
     this.sun.intensity = LIGHT_LAUNCH.sun;
     this.stars = createStars(cfg.seed);
     this.scene.add(this.stars);
+    this.spaceDust = new SpaceDust(cfg.seed);
+    this.scene.add(this.spaceDust.points);
     // Planet halus bertekstur prosedural; sumbu dimiringkan agar kamera melihat lintang menengah, bukan tutup es kutub.
     this.earth = createPlanet('earth', EARTH_RADIUS, { segments: EARTH_SEGMENTS, clouds: true, atmosphere: ATMOSPHERES.earth ?? null });
     this.earth.root.rotation.x = EARTH_TILT;
@@ -251,14 +271,15 @@ export class FlightScene extends BaseScene {
     for (const p of [this.earth, this.destBody]) if (p) { this.scene.remove(p.root); p.dispose(); }
     if (this.terrain) { this.scene.remove(this.terrain.mesh); this.terrain.dispose(); }
     if (this.stars) { this.scene.remove(this.stars); this.stars.geometry.dispose(); (this.stars.material as THREE.Material).dispose(); }
-    for (const p of [this.smoke, this.dust]) if (p) { this.scene.remove(p.points); p.dispose(); }
+    for (const p of [this.smoke, this.dust, this.spaceDust]) if (p) { this.scene.remove(p.points); p.dispose(); }
     this.model = this.mountedLander = this.landingLander = this.flame = this.landingFlame = null;
+    this.landerIntro = null;
     this.world = null;
     this.island = null;
     this.pad = null;
     this.earth = this.destBody = this.stars = null;
     this.terrain = null;
-    this.smoke = this.dust = null;
+    this.smoke = this.dust = this.spaceDust = null;
     this.sim = null;
     this.hud = null;
   }
@@ -539,9 +560,33 @@ export class FlightScene extends BaseScene {
 
   private enterLanding(): void {
     if (!this.assembly || !this.terrain) return;
+    // Lander tidak muncul tiba-tiba: ia melanjutkan pose dan ukuran lander yang tadi di dalam roket. Satuan scene
+    // diubah dari satuan roket ke satuan pendaratan (posisi, kamera, dan serpihan tahap yang lepas dikalikan sama).
+    const mounted = this.mountedLander;
+    if (mounted && this.pivot.visible) {
+      this.pivot.updateMatrixWorld(true);
+      this.landerIntro = {
+        t: 0,
+        p0: mounted.getWorldPosition(new THREE.Vector3()).multiplyScalar(ROCKET_TO_LANDING),
+        q0: mounted.getWorldQuaternion(new THREE.Quaternion()),
+        s0: mounted.getWorldScale(new THREE.Vector3()).x * ROCKET_TO_LANDING,
+      };
+      for (const d of this.debris) {
+        d.group.position.multiplyScalar(ROCKET_TO_LANDING);
+        d.group.scale.multiplyScalar(ROCKET_TO_LANDING);
+        d.vel.multiplyScalar(ROCKET_TO_LANDING);
+        if (d.groundY !== undefined) d.groundY *= ROCKET_TO_LANDING;
+      }
+    }
+    const rocketCamPos = this.camPos.clone().multiplyScalar(ROCKET_TO_LANDING);
+    const rocketCamTarget = this.camTarget.clone().multiplyScalar(ROCKET_TO_LANDING);
     this.pivot.visible = false;
     this.landingLander = buildLander(this.assembly.modules, this.assembly.instruments);
-    this.landingLander.scale.setScalar(VISUAL.landerWorldScale);
+    this.landingLander.scale.setScalar(this.landerIntro?.s0 ?? VISUAL.landerWorldScale);
+    if (this.landerIntro) {
+      this.landingLander.position.copy(this.landerIntro.p0);
+      this.landingLander.quaternion.copy(this.landerIntro.q0);
+    }
     this.scene.add(this.landingLander);
     this.landingFlame = createFlame(0.5);
     this.landingFlame.position.set(0, 0.35, 0);
@@ -558,8 +603,14 @@ export class FlightScene extends BaseScene {
     this.scene.fog = dest.id === 'mars' ? new THREE.FogExp2(sky.clone().multiplyScalar(0.7).getHex(), 0.0009) : null;
     if (this.stars) (this.stars.material as THREE.PointsMaterial).opacity = dest.id === 'mars' ? 0 : 1;
     const camS = VISUAL.landerWorldScale * LANDING_CAM_FRACTION;
-    this.camPos.set(8 * camS, 4 * camS, 18 * camS);
-    this.camTarget.set(0, 2 * camS, 0);
+    if (this.landerIntro) {
+      // Kamera mulai dari bingkai roket (diskalakan) sehingga ukuran lander di layar sama; lalu mendekat ke bingkai pendaratan.
+      this.camPos.copy(rocketCamPos);
+      this.camTarget.copy(rocketCamTarget);
+    } else {
+      this.camPos.set(8 * camS, 4 * camS, 18 * camS);
+      this.camTarget.set(0, 2 * camS, 0);
+    }
   }
 
   /** Letakkan flame pada tahap terendah yang masih menempel. */
@@ -609,7 +660,10 @@ export class FlightScene extends BaseScene {
   private syncWorld(dt: number): void {
     const sim = this.sim;
     if (!sim) return;
-    if (sim.landing && this.landingLander && this.terrain) this.syncLanding(sim, dt);
+    if (sim.landing && this.landingLander && this.terrain) {
+      if (this.spaceDust) this.spaceDust.points.visible = false;
+      this.syncLanding(sim, dt);
+    }
     else this.syncRocket(sim, dt);
   }
 
@@ -635,14 +689,13 @@ export class FlightScene extends BaseScene {
       this.world.position.y = this.padY - (skyT ** GROUND_DROP_EXP) * GROUND_DROP;
       if (sim.throttle > 0) this.world.position.x -= dt * 30 * Math.sin(THREE.MathUtils.degToRad(this.lean));
     }
-    const transferring = sim.phase === 'transfer' || sim.phase === 'capture';
     const lastStage = sim.staging.stages[sim.staging.stages.length - 1];
     const burned = 1 - lastStage.burnRemainingSec / this.assembly.rocket.stages[this.assembly.rocket.stages.length - 1].burnSec;
     // Perjalanan transfer: Bumi mengecil dan menjauh perlahan (tidak lenyap seketika), planet tujuan tumbuh dari titik kecil.
     const departure = departureProgress(sim.phase, burned);
     if (this.earth) {
       const shrink = earthScale(departure);
-      this.earth.root.visible = !transferring || departure < 1;
+      this.earth.root.visible = true;
       this.earth.spin(dt, EARTH_SPIN);
       const rise = smoothstep(0.55, 1, skyT);
       // Bumi menyusut sambil bergeser ke belakang-kiri-atas (jauh dari kamera) sehingga tetap terlihat mengecil
@@ -655,11 +708,18 @@ export class FlightScene extends BaseScene {
       );
     }
     if (this.destBody) {
-      this.destBody.root.visible = transferring;
-      const s = destScale(sim.phase, departure, burned);
-      this.destBody.root.scale.setScalar(s);
+      const s = destScale(sim.phase, departure, burned, sim.crashed ? skyT : sim.progress);
+      this.destBody.root.visible = s > 0.001;
+      this.destBody.root.scale.setScalar(Math.max(s, 0.001));
       this.destBody.root.position.set(...DEST_BODY_POS);
       this.destBody.spin(dt, DEST_SPIN);
+    }
+
+    // Debu antariksa mengalir ke belakang roket (berlawanan arah hidung) selama di luar atmosfer.
+    if (this.spaceDust) {
+      const flow = sim.phase === 'launch' ? DUST_FLOW.launch * sim.throttle : sim.phase === 'orbit' ? DUST_FLOW.orbit : sim.phase === 'transfer' ? DUST_FLOW.transfer * sim.throttle : 0;
+      const visible = sim.crashed ? 0 : smoothstep(0.55, 0.85, skyT) * DUST_OPACITY;
+      this.spaceDust.update(dt, this.axisDir().multiplyScalar(-flow), this.camTarget, visible);
     }
 
     this.updateRocketFlame();
@@ -674,7 +734,11 @@ export class FlightScene extends BaseScene {
     const axis = this.axisDir();
     const wantTarget = axis.clone().multiplyScalar(-(remaining / 2 - 1.5));
     const dist = clamp(remaining * 1.9, 14, 70);
-    const wantPos = wantTarget.clone().add(new THREE.Vector3(0, dist * 0.12, dist));
+    // Sudut kamera mengikuti roket yang membelok ke arah planet: dari depan menara saat tegak, ke belakang-samping saat mendatar.
+    const heading = THREE.MathUtils.degToRad(CAM_HEADING_DEG) * (sim.phase === 'launch' && !sim.crashed ? smoothstep(0.1, 0.7, sim.progress) : 1);
+    // Dari samping-belakang ekor roket lebih dekat ke kamera, jadi jarak ditambah sedikit agar tidak menutupi layar.
+    const camDist = dist * (1 + CAM_HEADING_DIST_BOOST * (heading / THREE.MathUtils.degToRad(CAM_HEADING_DEG)));
+    const wantPos = wantTarget.clone().add(new THREE.Vector3(-Math.sin(heading) * camDist, camDist * 0.12, Math.cos(heading) * camDist));
     const k = dt === 0 ? 1 : 1 - Math.exp(-CAM_FOLLOW * dt);
     this.camTarget.lerp(wantTarget, k);
     this.camPos.lerp(wantPos, k);
@@ -693,7 +757,18 @@ export class FlightScene extends BaseScene {
       ? landing.altitudeM
       : VISUAL_ALT_REAL_M + (landing.altitudeM - VISUAL_ALT_REAL_M) * VISUAL_ALT_COMPRESS;
     terrain.mesh.position.set(-this.padX, -visualAlt, 0);
-    lander.rotation.z = -THREE.MathUtils.degToRad(landing.tiltDeg);
+    const tilt = new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, -THREE.MathUtils.degToRad(landing.tiltDeg)));
+    const intro = this.landerIntro;
+    if (intro) {
+      intro.t += dt;
+      const k = smoothstep(0, LANDER_INTRO_SEC, intro.t);
+      lander.quaternion.slerpQuaternions(intro.q0, tilt, k);
+      lander.position.copy(intro.p0).multiplyScalar(1 - k);
+      lander.scale.setScalar(intro.s0 + (VISUAL.landerWorldScale - intro.s0) * k);
+      if (intro.t >= LANDER_INTRO_SEC) this.landerIntro = null;
+    } else {
+      lander.quaternion.copy(tilt);
+    }
     if (this.landingFlame) setFlame(this.landingFlame, landing.landed ? 0 : sim.throttle * (landing.fuelKg > 0 ? 1 : 0), FLAME_LENGTH_LANDER, this.vrng());
     const thrusting = !landing.landed && sim.throttle > 0.02 && landing.fuelKg > 0;
     if (thrusting && this.smoke) {

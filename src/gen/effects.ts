@@ -232,6 +232,17 @@ export const footprintAge01 = (age: number, life: number): number => Math.min(1,
 export const nextFootprintSlot = (cursor: number, count: number): number => (cursor + 1) % count;
 
 /**
+ * Bidang jejak sepatu: rata di tanah (normal +Y) dengan ujung jari (bagian atas tekstur) menghadap +Z lokal, yaitu arah
+ * depan astronot saat yaw 0; tumit di -Z.
+ */
+export function footprintGeometry(): THREE.PlaneGeometry {
+  const geo = new THREE.PlaneGeometry(0.26, 0.55);
+  geo.rotateX(-Math.PI / 2);
+  geo.rotateY(Math.PI);
+  return geo;
+}
+
+/**
  * Jejak sepatu astronot di regolit: kolam tetap berisi `count` jejak (InstancedMesh, satu draw call) yang memudar
  * menuju warna tanah seiring waktu; jejak terlama ditimpa saat kolam penuh.
  */
@@ -243,9 +254,9 @@ export class Footprints {
   private readonly c = new THREE.Color();
 
   constructor(private readonly count: number, private readonly lifeSec: number, private readonly dark: THREE.Color, private readonly ground: THREE.Color) {
-    const geo = new THREE.PlaneGeometry(0.26, 0.55);
-    geo.rotateX(-Math.PI / 2);
-    const mat = new THREE.MeshBasicMaterial({
+    const geo = footprintGeometry();
+    // Bahan berpencahayaan (bukan MeshBasicMaterial) agar jejak ikut gelap saat malam dan terang oleh senter, tidak bercahaya sendiri.
+    const mat = new THREE.MeshLambertMaterial({
       color: 0xffffff, alphaMap: bootprintTexture(), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, opacity: 0.8,
     });
     this.mesh = new THREE.InstancedMesh(geo, mat, count);

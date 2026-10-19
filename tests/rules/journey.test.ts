@@ -1,9 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEST_SCALE_CAPTURE, DEST_SCALE_END, DEST_SCALE_START, departureProgress, destScale, earthScale, EARTH_FAR_SCALE,
+  DEST_REVEAL_FROM, DEST_REVEAL_TO, DEST_SCALE_CAPTURE, DEST_SCALE_END, DEST_SCALE_START, departureProgress, destScale, earthScale, EARTH_FAR_SCALE,
 } from '../../src/rules/journey';
 
 describe('perjalanan transfer (visual)', () => {
+  it('planet tujuan sudah tumbuh bertahap sejak peluncuran, bukan muncul tiba-tiba saat transfer', () => {
+    expect(destScale('launch', 0, 0, 0)).toBe(0);
+    expect(destScale('launch', 0, 0, DEST_REVEAL_FROM)).toBe(0);
+    const mid = destScale('launch', 0, 0, (DEST_REVEAL_FROM + DEST_REVEAL_TO) / 2);
+    expect(mid).toBeGreaterThan(0);
+    expect(mid).toBeLessThan(DEST_SCALE_START);
+    expect(destScale('launch', 0, 0, DEST_REVEAL_TO)).toBeCloseTo(DEST_SCALE_START, 10);
+    expect(destScale('orbit', 0, 0)).toBe(DEST_SCALE_START);
+  });
+
   it('di orbit Bumi masih penuh dan planet tujuan sangat kecil; sesudah transfer Bumi hampir titik', () => {
     expect(departureProgress('orbit', 0)).toBe(0);
     expect(earthScale(0)).toBe(1);

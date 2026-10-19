@@ -4,8 +4,11 @@
  */
 export type JourneyPhase = 'launch' | 'orbit' | 'transfer' | 'capture' | 'landing' | 'ended';
 
-export const EARTH_FAR_SCALE = 0.03;
-export const DEST_SCALE_START = 0.08;
+export const EARTH_FAR_SCALE = 0.1;
+export const DEST_SCALE_START = 0.25;
+/** Planet tujuan mulai tampak (tumbuh dari titik) saat peluncuran melewati `DEST_REVEAL_FROM`, penuh di `DEST_REVEAL_TO` (porsi lintasan). */
+export const DEST_REVEAL_FROM = 0.05;
+export const DEST_REVEAL_TO = 0.5;
 export const DEST_SCALE_END = 1.6;
 export const DEST_SCALE_CAPTURE = 2.0;
 
@@ -23,7 +26,8 @@ export function departureProgress(phase: JourneyPhase, burned: number): number {
 export const earthScale = (departure: number): number => 1 - departure * (1 - EARTH_FAR_SCALE);
 
 /** Skala planet tujuan: tumbuh sepanjang transfer, lalu membesar lagi saat penangkapan orbit. */
-export function destScale(phase: JourneyPhase, departure: number, burned: number): number {
+export function destScale(phase: JourneyPhase, departure: number, burned: number, launchProgress = 1): number {
+  if (phase === 'launch') return DEST_SCALE_START * smooth01((launchProgress - DEST_REVEAL_FROM) / (DEST_REVEAL_TO - DEST_REVEAL_FROM));
   if (phase === 'capture') return DEST_SCALE_END + Math.min(1, Math.max(0, burned)) * (DEST_SCALE_CAPTURE - DEST_SCALE_END);
   return DEST_SCALE_START + (DEST_SCALE_END - DEST_SCALE_START) * departure;
 }

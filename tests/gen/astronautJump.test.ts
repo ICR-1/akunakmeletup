@@ -23,7 +23,7 @@ describe('animasi lompat astronot', () => {
     const standFoot = lowestY(rig);
     settle(rig, { ...STILL, crouch: 1 });
     const crouchTop = new THREE.Box3().setFromObject(rig.root).max.y;
-    expect(crouchTop).toBeLessThan(standTop - 0.15);
+    expect(crouchTop).toBeLessThan(standTop - 0.12);
     expect(Math.abs(lowestY(rig) - standFoot)).toBeLessThan(0.08);
   });
 

@@ -11,7 +11,6 @@
 - **Potret dialog**: SVG poligon inline buatan sendiri.
 - **Font**: tumpukan font monospace bawaan sistem; tidak ada font web.
 - **Jaringan**: build produksi hanya memuat tiga berkas statis (HTML, JS, CSS) dari origin yang sama; tidak ada CDN atau permintaan pihak ketiga.
-- **Referensi visual**: `astronot.jpeg` (di akar repositori, disediakan tim) hanya dipakai sebagai acuan bentuk saat memodelkan astronot secara prosedural. Berkas itu tidak dimuat oleh game dan tidak ikut dalam `dist/`.
 
 ## Identitas
 Badan antariksa dalam game, *Badan Antariksa Khatulistiwa*, serta tokoh Arka, NOVA, dan Dr. Sekar Wulandari adalah fiksi. Proyek ini tidak memakai logo, merek, atau karakter berhak cipta milik pihak lain, dan tidak berafiliasi dengan badan antariksa mana pun.

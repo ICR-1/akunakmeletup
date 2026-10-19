@@ -24,6 +24,8 @@ export const NIGHT_HOURS = 6;
 export const DAY_SEC = DAY_HOURS * GAME_HOUR_SEC;
 export const NIGHT_SEC = NIGHT_HOURS * GAME_HOUR_SEC;
 export const SURFACE_TIME_LIMIT_SEC = 480;
+/** Bumi di langit Bulan berputar sekali per siang Matahari (dipercepat dari 24 jam agar putarannya terlihat), mengikuti waktu permukaan. */
+export const EARTH_SPIN_HOURS = DAY_HOURS;
 
 /** Komunikasi dan uplink (PRD 14). */
 export const COMMS_WINDOW_SEC = 30;

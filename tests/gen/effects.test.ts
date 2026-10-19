@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { footprintAge01, nextFootprintSlot, puffFade, stepPuff } from '../../src/gen/effects';
+import { footprintAge01, footprintGeometry, nextFootprintSlot, puffFade, stepPuff } from '../../src/gen/effects';
 
 describe('debu langkah kaki (balistik)', () => {
   it('terangkat lalu jatuh pelan di gravitasi Bulan dan menempel di tanah', () => {
@@ -48,5 +48,16 @@ describe('jejak sepatu (cincin tetap)', () => {
     expect(footprintAge01(22.5, 45)).toBeCloseTo(0.5, 10);
     expect(footprintAge01(99, 45)).toBe(1);
     expect(footprintAge01(-3, 45)).toBe(0);
+  });
+});
+
+describe('arah jejak sepatu', () => {
+  it('ujung jari (atas tekstur) menghadap depan astronot (+Z) dan bidang menghadap atas', () => {
+    const geo = footprintGeometry();
+    const pos = geo.getAttribute('position'), uv = geo.getAttribute('uv'), normal = geo.getAttribute('normal');
+    for (let i = 0; i < pos.count; i++) {
+      expect(pos.getZ(i)).toBeCloseTo(uv.getY(i) === 1 ? 0.275 : -0.275, 6);
+      expect(normal.getY(i)).toBeCloseTo(1, 6);
+    }
   });
 });

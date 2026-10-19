@@ -28,7 +28,7 @@ Status: **SESUAI** = terpenuhi dan terbukti; **SEBAGIAN** = inti terpenuhi, ada 
 | `npm run lint` | Bersih, 0 peringatan |
 | `npm run build` | Berhasil; `dist/` 956 KB (batas 10 MB) |
 | Permintaan jaringan build produksi | 3 (HTML, JS, CSS), semua `localhost`; tanpa CDN, font, atau aset pihak ketiga |
-| Berkas aset di repo (png/jpg/model/audio/font) | Hanya `astronot.jpeg` (referensi, tidak dimuat dan tidak ada di `dist/`) |
+| Berkas aset di repo (png/jpg/model/audio/font) | Tidak ada |
 | `Math.random` di `src/` | 0 pemakaian |
 | Konsol browser pada alur penuh (dev dan produksi) | Bersih (tanpa error/warning) |
 | Uji ketahanan | 80 penerbangan berseed berbeda dan 480 detik permukaan tanpa NaN (`tests/rules/soak.test.ts`) |
