@@ -24,9 +24,9 @@ Status: **SESUAI** = terpenuhi dan terbukti; **SEBAGIAN** = inti terpenuhi, ada 
 ## Verifikasi mekanis
 | Pemeriksaan | Hasil |
 | --- | --- |
-| `npm test` | 510 tes lulus, 0 gagal (53 berkas) |
+| `npm test` | 516 tes lulus, 0 gagal (54 berkas) |
 | `npm run lint` | Bersih, 0 peringatan |
-| `npm run build` | Berhasil; `dist/` 956 KB (batas 10 MB) |
+| `npm run build` | Berhasil; `dist/` ~1,04 MB (batas 10 MB), bersih tanpa error/warning |
 | Permintaan jaringan build produksi | 3 (HTML, JS, CSS), semua `localhost`; tanpa CDN, font, atau aset pihak ketiga |
 | Berkas aset di repo (png/jpg/model/audio/font) | Tidak ada |
 | `Math.random` di `src/` | 0 pemakaian |

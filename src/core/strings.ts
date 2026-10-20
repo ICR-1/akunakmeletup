@@ -58,7 +58,7 @@ export const DESIGN = {
   rtg: 'RTG (maks 1)',
   antenna: 'Antena utama',
   relay: 'Tautan relay (opsional)',
-  rover: 'Lunar Cruiser (opsional, hanya Bulan)',
+  rover: 'Lunar Cruiser (opsional)',
   instruments: 'Instrumen sains',
   astronautScale: 'Astronot (skala)',
   fuel: 'Isi bahan bakar',
@@ -78,6 +78,21 @@ export const DESIGN = {
   payload: 'muatan',
   hint: 'Seret mouse untuk memutar kamera, roda untuk zoom.',
   mvpOnly: 'MVP',
+};
+
+export const STUDENT_UI = {
+  presetsTitle: '💡 Rekomendasi Rakitan Cepat Siswa',
+  presetsSubtitle: 'Pilih paket rakitan siap luncur agar tidak pusing merakit dari nol:',
+  presetStandard: '🚀 Standar Disarankan',
+  presetCruiser: '🚜 Jelajah (+Rover)',
+  reset: '🔄 Reset Desain',
+  recommendedBadge: '⭐ Disarankan',
+  categoryCore: 'Komponen Inti (Wajib)',
+  categoryOptional: 'Perlengkapan Tambahan (Opsional)',
+  categoryScience: 'Sains & Bahan Bakar',
+  autoFixButton: '✨ Terapkan Rekomendasi NOVA (Siap Luncur)',
+  studentTipTitle: '💡 Tips Siswa:',
+  studentTipHelp: 'Gunakan preset di atas jika kombinasi terasa terlalu rumit!',
 } as const;
 
 export const NOVA_MESSAGES = {

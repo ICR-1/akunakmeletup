@@ -1,9 +1,10 @@
 import { RELAY_ANTENNA_ID } from '../core/constants';
 import {
-  mainAntennaIds, moduleCount, setDestination, setExclusive, setFuelFraction, setModuleCount,
-  setRocket, toggleInstrument,
+  defaultMission, detectActivePreset, getPresetMission, isRecommendedItem, mainAntennaIds,
+  moduleCount, setDestination, setExclusive, setFuelFraction, setModuleCount, setRocket,
+  STUDENT_PRESETS, toggleInstrument,
 } from '../core/missionBuilder';
-import { DESIGN, STORY_UI } from '../core/strings';
+import { DESIGN, STORY_UI, STUDENT_UI } from '../core/strings';
 import type { PreflightResult } from '../rules/preflight';
 import type { Catalog, Id, MissionConfig, Module } from '../rules/types';
 import { clear, el } from './dom';
@@ -33,14 +34,18 @@ function section(title: string, key = ''): { root: HTMLElement; body: HTMLElemen
   return { root, body, setSummary: (t) => { summary.textContent = t; } };
 }
 
-function choiceGroup(title: string, items: Item[], onPick: (id: Id) => void, key = '') {
+function choiceGroup(title: string, items: Item[], onPick: (id: Id) => void, key = '', isRec?: (id: Id) => boolean) {
   const { root, body, setSummary } = section(title, key);
   const buttons = new Map<Id, HTMLButtonElement>();
   for (const item of items) {
     const b = el('button', 'choice');
     b.type = 'button';
     b.disabled = item.disabled === true;
-    b.appendChild(el('span', 'choice-name', item.label));
+    const nameEl = el('span', 'choice-name', item.label);
+    if (isRec?.(item.id)) {
+      nameEl.appendChild(el('span', 'rec-badge', STUDENT_UI.recommendedBadge));
+    }
+    b.appendChild(nameEl);
     if (item.sub) b.appendChild(el('span', 'choice-sub', item.sub));
     b.addEventListener('click', () => onPick(item.id));
     body.appendChild(b);
@@ -48,20 +53,35 @@ function choiceGroup(title: string, items: Item[], onPick: (id: Id) => void, key
   }
   return {
     root,
-    sync: (selected: Id | null) => {
-      buttons.forEach((b, id) => b.classList.toggle('sel', id === selected));
+    sync: (selected: Id | null, checkRec?: (id: Id) => boolean) => {
+      buttons.forEach((b, id) => {
+        b.classList.toggle('sel', id === selected);
+        const nameEl = b.querySelector('.choice-name');
+        const badge = b.querySelector('.rec-badge');
+        const rec = checkRec?.(id) ?? false;
+        if (rec && !badge && nameEl) {
+          nameEl.appendChild(el('span', 'rec-badge', STUDENT_UI.recommendedBadge));
+        } else if (!rec && badge) {
+          badge.remove();
+        }
+      });
       setSummary(summarizeSelection(items, selected));
     },
   };
 }
 
-function counterGroup(title: string, items: Item[], onSet: (id: Id, n: number) => void, getCount: (id: Id) => number, key = '') {
+function counterGroup(title: string, items: Item[], onSet: (id: Id, n: number) => void, getCount: (id: Id) => number, key = '', isRec?: (id: Id) => boolean) {
   const { root, body, setSummary } = section(title, key);
   const values = new Map<Id, HTMLElement>();
+  const rows = new Map<Id, HTMLElement>();
   for (const item of items) {
     const row = el('div', 'counter');
     const info = el('span', 'counter-info');
-    info.append(el('span', 'choice-name', item.label), el('span', 'choice-sub', item.sub ?? ''));
+    const nameEl = el('span', 'choice-name', item.label);
+    if (isRec?.(item.id)) {
+      nameEl.appendChild(el('span', 'rec-badge', STUDENT_UI.recommendedBadge));
+    }
+    info.append(nameEl, el('span', 'choice-sub', item.sub ?? ''));
     const minus = el('button', 'step', '−');
     const plus = el('button', 'step', '+');
     const value = el('span', 'counter-value', '0');
@@ -71,11 +91,22 @@ function counterGroup(title: string, items: Item[], onSet: (id: Id, n: number) =
     row.append(info, minus, value, plus);
     body.appendChild(row);
     values.set(item.id, value);
+    rows.set(item.id, row);
   }
   return {
     root,
-    sync: () => {
+    sync: (checkRec?: (id: Id) => boolean) => {
       values.forEach((v, id) => { v.textContent = String(getCount(id)); });
+      rows.forEach((row, id) => {
+        const nameEl = row.querySelector('.choice-name');
+        const badge = row.querySelector('.rec-badge');
+        const rec = checkRec?.(id) ?? false;
+        if (rec && !badge && nameEl) {
+          nameEl.appendChild(el('span', 'rec-badge', STUDENT_UI.recommendedBadge));
+        } else if (!rec && badge) {
+          badge.remove();
+        }
+      });
       setSummary(summarizeCounts(items, getCount));
     },
   };
@@ -89,6 +120,7 @@ export class DesignPanel {
   private readonly syncs: (() => void)[] = [];
   private readonly indicators = new IndicatorView();
   private readonly badge = el('div', 'go-badge');
+  private readonly autoFix = el('button', 'autofix-button', STUDENT_UI.autoFixButton);
   private readonly metrics = el('div', 'metrics');
   private readonly objectives = el('ul', 'objective-list');
   private readonly stageList = el('ol', 'stage-list');
@@ -122,6 +154,7 @@ export class DesignPanel {
     const root = el('aside', 'panel panel-left');
     root.appendChild(el('h2', '', DESIGN.title));
 
+    // Pemilihan Destinasi
     const dest = choiceGroup(DESIGN.destination, cat.destinations.filter((d) => d.mvp).map((d) => {
       const locked = !this.options.unlocked.includes(d.id);
       return {
@@ -131,23 +164,76 @@ export class DesignPanel {
     }), (id) => this.handlers.change((c) => setDestination(c, id)), 'destination');
     this.syncs.push(() => dest.sync(this.config.destinationId));
 
+    // Pilihan Cepat / Preset Desain Siswa
+    const presetsBox = el('div', 'student-presets');
+    presetsBox.append(
+      el('div', 'student-presets-title', STUDENT_UI.presetsTitle),
+      el('p', 'student-presets-sub', STUDENT_UI.presetsSubtitle),
+    );
+    const presetsGrid = el('div', 'student-presets-grid');
+    const destId = () => this.config.destinationId;
+
+    const btnStd = el('button', 'preset-btn');
+    btnStd.type = 'button';
+    btnStd.append(
+      el('span', 'preset-btn-name', STUDENT_UI.presetStandard),
+      el('span', 'preset-btn-desc', STUDENT_PRESETS[destId()]?.standard.desc ?? ''),
+    );
+    btnStd.addEventListener('click', () => {
+      this.handlers.change((c) => getPresetMission(c.destinationId, 'standard', c.seed));
+    });
+
+    const btnCruiser = el('button', 'preset-btn');
+    btnCruiser.type = 'button';
+    btnCruiser.append(
+      el('span', 'preset-btn-name', STUDENT_UI.presetCruiser),
+      el('span', 'preset-btn-desc', STUDENT_PRESETS[destId()]?.cruiser.desc ?? ''),
+    );
+    btnCruiser.addEventListener('click', () => {
+      this.handlers.change((c) => getPresetMission(c.destinationId, 'cruiser', c.seed));
+    });
+
+    const btnReset = el('button', 'preset-reset-btn', STUDENT_UI.reset);
+    btnReset.type = 'button';
+    btnReset.addEventListener('click', () => {
+      this.handlers.change((c) => defaultMission(c.destinationId, c.seed));
+    });
+
+    presetsGrid.append(btnStd, btnCruiser, btnReset);
+    presetsBox.appendChild(presetsGrid);
+
+    this.syncs.push(() => {
+      const active = detectActivePreset(this.config);
+      btnStd.classList.toggle('active', active === 'standard');
+      btnCruiser.classList.toggle('active', active === 'cruiser');
+      const d = destId();
+      const pStd = STUDENT_PRESETS[d]?.standard;
+      const pCruiser = STUDENT_PRESETS[d]?.cruiser;
+      const descStd = btnStd.querySelector('.preset-btn-desc');
+      const descCruiser = btnCruiser.querySelector('.preset-btn-desc');
+      if (descStd && pStd) descStd.textContent = pStd.desc;
+      if (descCruiser && pCruiser) descCruiser.textContent = pCruiser.desc;
+    });
+
+    const isRec = (id: Id) => isRecommendedItem(this.config.destinationId, id);
+
     const rocket = choiceGroup(DESIGN.rocket, cat.rockets.map((r) => ({
       id: r.id, label: r.name,
       sub: `${DESIGN.payload} ${r.payloadToLeoKg} kg · ${r.stages.length} ${DESIGN.stages} · ${r.costMusd} MUSD`,
-    })), (id) => this.handlers.change((c) => setRocket(c, id)), 'rocket');
-    this.syncs.push(() => rocket.sync(this.config.rocketId));
+    })), (id) => this.handlers.change((c) => setRocket(c, id)), 'rocket', isRec);
+    this.syncs.push(() => rocket.sync(this.config.rocketId, isRec));
 
     const exclusive = (title: string, mods: Module[], extra: (m: Module) => string, key: string) => {
       const ids = mods.map((m) => m.id);
       const g = choiceGroup(title, mods.map((m) => ({ id: m.id, label: m.name, sub: info(m, extra(m)) })),
-        (id) => this.handlers.change((c) => setExclusive(c, cat, ids, id)), key);
-      this.syncs.push(() => g.sync(ids.find((id) => moduleCount(this.config, id) > 0) ?? null));
+        (id) => this.handlers.change((c) => setExclusive(c, cat, ids, id)), key, isRec);
+      this.syncs.push(() => g.sync(ids.find((id) => moduleCount(this.config, id) > 0) ?? null, isRec));
       return g.root;
     };
     const counter = (title: string, mods: Module[], key: string) => {
       const g = counterGroup(title, mods.map((m) => ({ id: m.id, label: m.name, sub: info(m) })),
-        (id, n) => this.handlers.change((c) => setModuleCount(c, cat, id, n)), (id) => moduleCount(this.config, id), key);
-      this.syncs.push(g.sync);
+        (id, n) => this.handlers.change((c) => setModuleCount(c, cat, id, n)), (id) => moduleCount(this.config, id), key, isRec);
+      this.syncs.push(() => g.sync(isRec));
       return g.root;
     };
 
@@ -156,8 +242,8 @@ export class DesignPanel {
 
     const instruments = counterGroup(DESIGN.instruments, cat.instruments.map((i) => ({
       id: i.id, label: i.name, sub: `${i.massKg} kg · ${i.powerW} W · ${i.costMusd} MUSD`,
-    })), (id) => this.handlers.change((c) => toggleInstrument(c, cat, id)), (id) => (this.config.instrumentIds.includes(id) ? 1 : 0), 'instruments');
-    this.syncs.push(instruments.sync);
+    })), (id) => this.handlers.change((c) => toggleInstrument(c, cat, id)), (id) => (this.config.instrumentIds.includes(id) ? 1 : 0), 'instruments', isRec);
+    this.syncs.push(() => instruments.sync(isRec));
 
     const fuelSection = section(DESIGN.fuel, 'fuel');
     fuelSection.body.classList.add('fuel-body');
@@ -175,17 +261,22 @@ export class DesignPanel {
     });
 
     root.append(
-      dest.root, rocket.root,
+      dest.root,
+      presetsBox,
+      el('div', 'panel-category-header', STUDENT_UI.categoryCore),
+      rocket.root,
       exclusive(DESIGN.lander, this.kind('lander'), (m) => `slot ${m.stats.instrumentSlots} · `, 'lander'),
       exclusive(DESIGN.engine, this.kind('engine'), (m) => `Isp ${m.stats.ispS} s · `, 'engine'),
       counter(DESIGN.tanks, this.kind('tank'), 'tanks'),
       counter(DESIGN.solar, this.kind('solar'), 'solar'),
       counter(DESIGN.battery, this.kind('battery'), 'battery'),
-      counter(DESIGN.rtg, this.kind('rtg'), 'rtg'),
       exclusive(DESIGN.antenna, antennas, (m) => `rate ${m.stats.rate} · `, 'antenna'),
+      instruments.root,
+      fuelSection.root,
+      el('div', 'panel-category-header', STUDENT_UI.categoryOptional),
+      counter(DESIGN.rtg, this.kind('rtg'), 'rtg'),
       counter(DESIGN.relay, relay, 'relay'),
       counter(DESIGN.rover, this.kind('rover'), 'rover'),
-      instruments.root, fuelSection.root,
     );
     return root;
   }
@@ -193,6 +284,12 @@ export class DesignPanel {
   private buildInspector(): HTMLElement {
     const root = el('aside', 'panel panel-right');
     root.appendChild(this.badge);
+    this.autoFix.type = 'button';
+    this.autoFix.addEventListener('click', () => {
+      this.handlers.change((c) => getPresetMission(c.destinationId, 'standard', c.seed));
+    });
+    root.appendChild(this.autoFix);
+
     const ind = section(DESIGN.indicators);
     ind.body.append(this.indicators.root, this.metrics);
     const obj = section(DESIGN.objectives);
@@ -214,6 +311,7 @@ export class DesignPanel {
     this.indicators.update(result.indicators);
     this.badge.textContent = result.go ? DESIGN.go : DESIGN.noGo;
     this.badge.dataset.go = String(result.go);
+    this.autoFix.hidden = result.go;
     this.launch.disabled = !result.go;
     this.launch.textContent = result.go ? DESIGN.launch : DESIGN.launchBlocked;
 
@@ -247,7 +345,11 @@ export class DesignPanel {
 
     const warnings = novaWarnings(result, config, this.catalog);
     clear(this.nova);
-    if (warnings.length === 0) this.nova.appendChild(el('p', 'nova-ok', 'Semua indikator aman. Siap diluncurkan, Arka!'));
-    warnings.forEach((w) => this.nova.appendChild(el('p', 'nova-warn', w)));
+    if (warnings.length === 0) {
+      this.nova.appendChild(el('p', 'nova-ok', 'Semua indikator aman. Siap diluncurkan, Arka!'));
+    } else {
+      warnings.forEach((w) => this.nova.appendChild(el('p', 'nova-warn', w)));
+      this.nova.appendChild(el('div', 'nova-student-tip', `${STUDENT_UI.studentTipTitle} ${STUDENT_UI.studentTipHelp}`));
+    }
   }
 }
