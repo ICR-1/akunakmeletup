@@ -17,6 +17,20 @@ export function batteryCapacityWh(a: Assembly): number {
   return sumStat(modulesOfKind(a, 'battery'), 'capacityWh');
 }
 
+/**
+ * Kapasitas penyimpanan daya efektif wahana (Wh):
+ * Menggunakan total kapasitas modul baterai yang terpasang.
+ * Bila wahana ditenagai RTG tanpa modul baterai terpisah, kapasitas penyangga diturunkan
+ * dari cadangan daya RTG (PRD 14 energi malam: powerRtg * NIGHT_HOURS) agar wahana
+ * tidak mengalami kehabisan daya (0%) saat tiba di permukaan.
+ */
+export function vehicleEnergyCapacityWh(a: Assembly): number {
+  const bat = batteryCapacityWh(a);
+  if (bat > 0) return bat;
+  const rtg = rtgPowerW(a);
+  return rtg > 0 ? rtg * NIGHT_HOURS : 0;
+}
+
 /** Pday = panel surya + RTG. */
 export function dayPowerW(a: Assembly): number {
   return solarPowerW(a) + rtgPowerW(a);

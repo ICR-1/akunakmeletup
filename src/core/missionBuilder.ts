@@ -29,7 +29,7 @@ export const STUDENT_PRESETS: Record<Id, Record<PresetKey, StudentPreset>> = {
       desc: 'Pandu-1 + Lunar Cruiser (Eksplorasi permukaan dengan mobil penjelajah)',
       config: {
         destinationId: 'moon', rocketId: 'pandu_1',
-        moduleIds: ['lander_s', 'eng_eff', 'tank_s', 'tank_m', 'rtg', 'ant_hga', 'rover_lc'],
+        moduleIds: ['lander_s', 'eng_eff', 'tank_s', 'tank_m', 'rtg', 'battery_s', 'ant_hga', 'rover_lc'],
         instrumentIds: ['sample_drill', 'cam_pano'], fuelFraction: 1,
       },
     },

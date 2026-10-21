@@ -166,7 +166,7 @@ export const FLIGHT_UI = {
     guide: 'Panduan',
     deviation: 'Simpangan',
   },
-  controls: 'W/S thrust · panah / mouse (klik layar) pitch & yaw · A/D miring (saat mendarat) · F lepas tahap · Shift boost · Spasi presisi',
+  controls: 'W/S thrust · panah / mouse pitch & yaw · Alt kursor · A/D miring (saat mendarat) · F lepas tahap · Shift boost · Spasi presisi',
   result: {
     perfect: 'Pendaratan mulus!',
     success: 'Pendaratan sukses.',
@@ -250,7 +250,7 @@ export const SURFACE_UI = {
     yes: 'Kirim dan akhiri',
     no: 'Kembali bekerja',
   },
-  controls: 'WASD jalan · Shift lari · Spasi lompat · E interaksi · R Lunar Cruiser · Q pemindai · Tab jurnal · mouse (klik layar) / panah putar kamera',
+  controls: 'WASD jalan · mouse / panah putar kamera · Alt kursor · E interaksi · R Lunar Cruiser · Q pemindai · Tab jurnal · Shift lari · Spasi lompat',
 } as const;
 
 export const MINIGAME_NAMES: Record<string, string> = {

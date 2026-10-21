@@ -164,6 +164,17 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
 (d) **Tombol Auto-Perbaiki NOVA:** tombol bantuan `✨ Terapkan Rekomendasi NOVA` muncul otomatis saat rakitan No-Go sehingga siswa yang salah rakit dapat langsung kembali ke kondisi GO dengan satu klik.
 (e) **Tips Edukatif Siswa:** kotak NOVA menambahkan bimbingan praktis berorientasi edukasi saat terjadi peringatan. Tes: `tests/rules/presets.test.ts`.
 
+127. **Smart Auto Toggle Cursor (permintaan pemilik proyek):**
+(a) Dibangun modul pusat `src/core/cursor.ts` (`CursorManager`) yang terintegrasi di `GameContext`.
+(b) **Kondisi Kursor Dibutuhkan (Auto-Unlock):** pointer lock otomatis dilepas dan kursor sistem muncul seketika saat event krisis/dialog dibuka, minigame sains dimulai, dialog konfirmasi uplink dibuka, panel hasil penerbangan/pendaratan muncul, panel jurnal (Tab) dibuka, atau saat berpindah ke scene antarmuka 2D (`briefing`, `design`, `review`).
+(c) **Kondisi Kursor Tidak Dibutuhkan (Auto-Lock):** kursor otomatis terkunci kembali ke canvas (`requestPointerLock`) seketika saat dialog krisis ditutup, minigame selesai, uplink dibatalkan, memasuki gameplay 3D (`flight` dan `surface`), saat pemain menekan tombol kontrol gerak/gameplay (`W`, `A`, `S`, `D`, panah, `Space`, `Shift`, `E`, `Q`, `R`, `F`), atau saat mengeklik area dunia 3D di luar tombol interaktif.
+(d) **Manual Toggle Cerdas (Alt):** pemain dapat menekan tombol `Alt` kapan saja di scene 3D untuk membebaskan kursor secara manual (misalnya untuk mengeklik tombol kontrol audio/volume/kualitas di pojok layar), dan menekan `Alt` lagi atau menekan tombol gerak WASD akan langsung mengunci kembali kursor ke kendali kamera/kemudi. Tes: `tests/core/cursor.test.ts`.
+
+128. **Penyelesaian Masalah Daya 0 pada Preset Misi Bulan Jelajah Rover (keluhan pengguna):**
+(a) Penyebab: Preset cepat siswa nomor 2 Bulan (`cruiser`: *Jelajah (+Rover)*) sebelumnya menggunakan generator RTG (`rtg`) tanpa modul baterai terpisah (`battery_s`/`battery_m`). Di scene Permukaan, status daya wahana diinisialisasi hanya dari `batteryCapacityWh(a)`. Karena wahana tanpa modul baterai memiliki kapasitas baterai 0 Wh, persentase daya di HUD langsung tampil 0% merah dan uplink terblokir (`canUplink` mensyaratkan `vehicleWh > 0`), serta beban kemudi rover (150 W) melebihi output RTG (120 W) sehingga seketika memicu pemadaman listrik (`power_out`).
+(b) Solusi 1 (Preset Siswa): `STUDENT_PRESETS.moon.cruiser` kini menyertakan `battery_s` (Baterai Kecil 400 Wh, 25 kg). Dengan Pandu-1, seluruh 5 indikator margin tetap berstatus GO (budget +4,75%, massa +4,3%, delta-v +0,35%, daya +4,35%, sinyal +300%). Baterai 400 Wh memberi penyangga energi yang cukup untuk mengemudi rover berkeliling hingga lebih dari 60 detik nyata tanpa henti sebelum terisi ulang kembali oleh RTG.
+(c) Solusi 2 (Hardening Engine Permukaan): `src/rules/power.ts` menambahkan `vehicleEnergyCapacityWh(a)` yang menghitung kapasitas penyangga dari cadangan malam RTG (`rtgPowerW * NIGHT_HOURS` = 720 Wh sesuai PRD 14) bila wahana rakitan kustom tidak memasang modul baterai fisik. Dengan demikian wahana bertenaga RTG tidak akan pernah lagi tiba di permukaan dengan daya 0%. Tes: `tests/rules/presets.test.ts`.
+
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.

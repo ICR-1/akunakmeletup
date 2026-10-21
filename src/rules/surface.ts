@@ -2,7 +2,7 @@ import { SURFACE, SURFACE_TIME_LIMIT_SEC, UPLINK_RADIUS_M } from '../core/consta
 import { modulesOfKind, type Assembly } from './catalog';
 import { signalQuality } from './comms';
 import { clamp } from './margin';
-import { batteryCapacityWh, isDaytime, loadW, productionW, stepBatteryWh } from './power';
+import { isDaytime, loadW, productionW, stepBatteryWh, vehicleEnergyCapacityWh } from './power';
 import type { Effect } from './types';
 
 export type Movement = 'idle' | 'walk' | 'run' | 'drive';
@@ -46,7 +46,7 @@ export const roverSpeedMs = (a: Assembly): number => roverModule(a)?.stats.speed
 export const roverDriveW = (a: Assembly): number => roverModule(a)?.stats.driveW ?? 0;
 
 export function createSurfaceState(a: Assembly): SurfaceState {
-  const capacity = batteryCapacityWh(a);
+  const capacity = vehicleEnergyCapacityWh(a);
   return {
     timeSec: 0, oxygen: SURFACE.meterMax, suitBattery: SURFACE.meterMax,
     vehicleWh: capacity, vehicleCapacityWh: capacity, faintCount: 0,

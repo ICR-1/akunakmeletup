@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { SceneId } from './constants';
+import type { CursorManager } from './cursor';
 import type { Input } from './input';
 import type { GameState, Store } from './store';
 import type { Catalog } from '../rules/types';
@@ -12,5 +13,6 @@ export interface GameContext {
   store: Store<GameState>;
   input: Input;
   catalog: Catalog;
+  cursor: CursorManager;
   go(scene: SceneId): void;
 }

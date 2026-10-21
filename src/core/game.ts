@@ -5,6 +5,7 @@ import { FIXED_DT, MAX_FRAME_DT, MAX_PIXEL_RATIO, SCENE_IDS, VISUAL, type SceneI
 import { markSharedMaterialsDirty } from '../gen/mesh';
 import { terrainMaterial } from '../gen/terrain';
 import { Input } from './input';
+import { CursorManager } from './cursor';
 import { SceneManager } from './sceneManager';
 import type { GameContext } from './context';
 import { loadCatalog } from './data';
@@ -28,6 +29,7 @@ export class Game {
   readonly store: Store<GameState> = createGameStore(defaultMission('moon'), loadSave(this.storage));
   readonly input = new Input();
   readonly scenes = new SceneManager();
+  readonly cursor: CursorManager;
   private renderer: THREE.WebGLRenderer;
   private accumulator = 0;
   private last = 0;
@@ -39,6 +41,7 @@ export class Game {
   private perfInit = false;
 
   constructor(canvas: HTMLCanvasElement) {
+    this.cursor = new CursorManager(canvas);
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
     const baseRatio = Math.min(window.devicePixelRatio, MAX_PIXEL_RATIO);
     this.renderer.setPixelRatio(baseRatio);
@@ -53,15 +56,16 @@ export class Game {
     if (!overlay) throw new Error('Elemen #overlay tidak ditemukan');
     const ctx: GameContext = {
       renderer: this.renderer, canvas, overlay, store: this.store, input: this.input,
-      catalog: loadCatalog(), go: (id) => this.scenes.switchTo(id),
+      cursor: this.cursor, catalog: loadCatalog(), go: (id) => this.scenes.switchTo(id),
     };
     [createBriefingScene, createDesignScene, createFlightScene, createSurfaceScene, createReviewScene].forEach(
       (make) => this.scenes.register(make(ctx)),
     );
     this.applyDevParams();
     this.setupAudioAndSave(overlay);
-    if (import.meta.env.DEV) (window as unknown as { __astra: unknown }).__astra = { renderer: this.renderer, scenes: this.scenes, store: this.store, detail: { getDetail, setDetail }, audio };
+    if (import.meta.env.DEV) (window as unknown as { __astra: unknown }).__astra = { renderer: this.renderer, scenes: this.scenes, store: this.store, detail: { getDetail, setDetail }, audio, cursor: this.cursor };
     this.scenes.onChange = (id) => {
+      this.cursor.onSceneChange(id);
       this.input.clear();
       audio.stopLoops();
       this.store.set({ currentScene: id });

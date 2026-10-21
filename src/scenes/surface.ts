@@ -176,7 +176,8 @@ export class SurfaceScene extends BaseScene {
   private readonly shake = new CameraShake(createRng(0x5ac4));
   private skyDay = new THREE.Color(0x000000);
   private skyNight = new THREE.Color(0x000000);
-  private readonly lockHandler = (): void => { if (!this.minigame) void this.ctx.canvas.requestPointerLock?.(); };
+  private journalOpen = false;
+  private readonly lockHandler = (): void => { if (!this.minigame) this.ctx.cursor.lock(); };
 
   constructor(ctx: GameContext) {
     super(ctx);
@@ -314,9 +315,12 @@ export class SurfaceScene extends BaseScene {
     this.flare = new LensFlare(ui);
     this.flareStrength = 0;
     this.refreshObjectives();
+    this.journalOpen = false;
     const nova = linesFor(this.ctx.catalog.dialogs, `nova_surface_${dest.id}`)[0];
     if (nova) showNovaBubble(ui, nova.text);
+    this.ctx.cursor.setPredicate(() => this.minigame !== null || (this.hud?.dialogOpen ?? false) || this.ended || this.journalOpen);
     this.ctx.canvas.addEventListener('click', this.lockHandler);
+    this.ctx.cursor.lock();
     if (this.cruiser) this.hud.toast(SURFACE_UI.messages.roverReady);
     this.syncVisuals(0);
   }
@@ -353,7 +357,8 @@ export class SurfaceScene extends BaseScene {
 
   protected override onExit(): void {
     this.ctx.canvas.removeEventListener('click', this.lockHandler);
-    if (document.pointerLockElement) document.exitPointerLock();
+    this.ctx.cursor.setPredicate(null);
+    this.ctx.cursor.unlock();
     this.closeMinigame();
     for (const fx of this.scanFx) { this.scene.remove(fx.ring); disposeMesh(fx.ring); }
     this.scanFx = [];
@@ -720,7 +725,9 @@ export class SurfaceScene extends BaseScene {
         this.ctx.catalog.instruments.find((i) => i.id === id)?.name ?? id, `${Math.round(score * 100)}%`,
       ]);
       hud.setJournal(journalFacts(dest), JOURNAL_NOTE, data);
-      hud.toggleJournal();
+      this.journalOpen = hud.toggleJournal();
+      if (this.journalOpen) this.ctx.cursor.unlock(true);
+      else this.ctx.cursor.lock();
     }
 
     if (input.consumePressed('KeyQ')) {
@@ -767,8 +774,11 @@ export class SurfaceScene extends BaseScene {
   }
 
   private askUplink(): void {
-    if (document.pointerLockElement) document.exitPointerLock();
-    this.hud?.confirmUplink(() => this.finish(true), () => undefined);
+    this.ctx.cursor.unlock();
+    this.hud?.confirmUplink(
+      () => this.finish(true),
+      () => this.ctx.cursor.lock(),
+    );
   }
 
   private startObjective(poi: Poi): void {
@@ -781,7 +791,7 @@ export class SurfaceScene extends BaseScene {
     this.state = paid.state;
     const game = createMinigame(inst.minigameId);
     if (!game) return;
-    if (document.pointerLockElement) document.exitPointerLock();
+    this.ctx.cursor.unlock();
     this.attempt += 1;
     const seed = this.ctx.store.get().mission.seed;
     let h = 0;
@@ -827,6 +837,7 @@ export class SurfaceScene extends BaseScene {
     this.minigame.game.dispose();
     this.minigame = null;
     this.ctx.input.clear();
+    this.ctx.cursor.lock();
   }
 
   private spawnScanRing(): void {
@@ -864,7 +875,7 @@ export class SurfaceScene extends BaseScene {
     if (!next || !hud || this.minigame || this.eventScene || this.faintTimer >= 0 || this.endTimer >= 0 || this.ended) return;
     if (this.state.timeSec < next.triggerSec) return;
     this.nextEvent += 1;
-    if (document.pointerLockElement) document.exitPointerLock();
+    this.ctx.cursor.unlock();
     audio.alarm();
     const seed = this.ctx.store.get().mission.seed;
     const openDialog = (): void => hud.showEvent(
@@ -878,7 +889,10 @@ export class SurfaceScene extends BaseScene {
         }
         return outcome;
       },
-      () => this.ctx.input.clear(),
+      () => {
+        this.ctx.input.clear();
+        this.ctx.cursor.lock();
+      },
       (minigameId) => new Promise<number>((done) => this.startEventMinigame(minigameId, done)),
     );
     this.startEventFx(next.event.id);
@@ -1086,6 +1100,7 @@ export class SurfaceScene extends BaseScene {
   private finish(uplinkSent: boolean): void {
     if (this.ended || !this.assembly) return;
     this.ended = true;
+    this.ctx.cursor.unlock();
     const a = this.assembly;
     const collected = [...this.collected.entries()].map(([id, score01]) => ({
       dataUnits: a.instruments.find((i) => i.id === id)?.dataUnits ?? 0, score01,

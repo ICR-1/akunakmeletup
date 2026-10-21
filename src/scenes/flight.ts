@@ -156,7 +156,7 @@ export class FlightScene extends BaseScene {
   private readonly shake = new CameraShake(createRng(0x5a4e));
   private readonly camTarget = new THREE.Vector3();
   private readonly camPos = new THREE.Vector3(0, 4, 20);
-  private readonly lockHandler = (): void => { void this.ctx.canvas.requestPointerLock?.(); };
+  private readonly lockHandler = (): void => { this.ctx.cursor.lock(); };
 
   constructor(ctx: GameContext) {
     super(ctx);
@@ -245,7 +245,9 @@ export class FlightScene extends BaseScene {
     this.cinematic = new Cinematic(ui);
     this.eventIntro = null;
     this.nova(ui, 'nova_flight_start');
+    this.ctx.cursor.setPredicate(() => this.eventOpen || (this.sim?.ended ?? false));
     this.ctx.canvas.addEventListener('click', this.lockHandler);
+    this.ctx.cursor.lock();
     this.camTarget.set(0, 0, 0);
     this.syncWorld(0);
     this.camera.position.copy(this.camPos);
@@ -253,7 +255,8 @@ export class FlightScene extends BaseScene {
 
   protected override onExit(): void {
     this.ctx.canvas.removeEventListener('click', this.lockHandler);
-    if (document.pointerLockElement) document.exitPointerLock();
+    this.ctx.cursor.setPredicate(null);
+    this.ctx.cursor.unlock();
     for (const d of this.debris) { this.scene.remove(d.group); disposeTree(d.group); }
     this.debris.length = 0;
     for (const e of this.explosions) e.dispose();
@@ -484,7 +487,7 @@ export class FlightScene extends BaseScene {
     const event = pickFlightEvent(this.ctx.catalog.events, assembly.destination.id, seed);
     if (!event) return;
     this.eventOpen = true;
-    if (document.pointerLockElement) document.exitPointerLock();
+    this.ctx.cursor.unlock();
     const openDialog = (): unknown => showEventDialog(
       ui, event,
       (i) => {
@@ -498,7 +501,11 @@ export class FlightScene extends BaseScene {
         for (const ev of sim.applyDvAdjust(dv)) this.handleEvent(ev);
         return outcome;
       },
-      () => { this.eventOpen = false; this.ctx.input.clear(); },
+      () => {
+        this.eventOpen = false;
+        this.ctx.input.clear();
+        this.ctx.cursor.lock();
+      },
     );
     const spec = eventSceneFor(event.id);
     if (!spec) { openDialog(); return; }
@@ -806,6 +813,7 @@ export class FlightScene extends BaseScene {
     if (!sim || !this.hud) return;
     const flight = sim.summary();
     if (!flight) return;
+    this.ctx.cursor.unlock();
     this.hud.showResult(flight, () => {
       if (flight.failed) {
         const outcome = buildOutcome({ config: this.ctx.store.get().mission, catalog: this.ctx.catalog, flight, surface: null });
