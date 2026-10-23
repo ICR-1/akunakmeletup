@@ -23,7 +23,7 @@ export function isInteractiveElement(target: EventTarget | null): boolean {
   if (typeof el.closest !== 'function') return false;
   return Boolean(
     el.closest(
-      'button, input, select, textarea, a, .dialog, .result-panel, .journal-panel, .modal, .audio-controls, [data-interactive]',
+      'button, input, select, textarea, a, .dialog, .result-panel, .journal-panel, .modal, .settings, [data-interactive]',
     ),
   );
 }

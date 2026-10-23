@@ -1199,7 +1199,7 @@ export class SurfaceScene extends BaseScene {
       signal01: signal, powerOut: this.state.powerOut,
       day: isDaytime(this.state.timeSec), elapsedSec: this.state.timeSec,
       remainingSec: SURFACE_TIME_LIMIT_SEC - this.state.timeSec,
-      hubBearing: heading(-this.pos.x, -this.pos.z), hubDistanceM: dist,
+      northBearing: heading(0, -1), hubBearing: heading(-this.pos.x, -this.pos.z), hubDistanceM: dist,
       scannerReady: this.state.scannerCooldownSec <= 0,
       pois: this.pois.map((p) => ({
         label: p.objective.title, done: p.done, bonus: p.objective.bonus === true, shown: scanned && !p.done,

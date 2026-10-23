@@ -6,6 +6,9 @@ import { Cinematic } from './cinematic';
 import { clear, el } from './dom';
 
 const COMPASS_HALF_RAD = Math.PI / 2;
+/** Garis skala kompas tiap 15°; tiap 45° diberi label mata angin. */
+const COMPASS_STEP_DEG = 15;
+const wrapPi = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
 const TOAST_MS = 3200;
 
 export interface PoiView {
@@ -29,6 +32,8 @@ export interface SurfaceHudView {
   day: boolean;
   elapsedSec: number;
   remainingSec: number;
+  /** Sudut arah Utara relatif terhadap arah hadap kamera (radian). */
+  northBearing: number;
   hubBearing: number;
   hubDistanceM: number;
   pois: PoiView[];
@@ -53,7 +58,10 @@ export class SurfaceHud {
   private readonly meters: Record<'oxygen' | 'suit' | 'vehicle' | 'signal', Meter>;
   private readonly clock = el('div', 'surface-clock');
   private readonly compass = el('div', 'compass');
-  private readonly hubTick = el('div', 'compass-tick hub');
+  private readonly compassStrip = el('div', 'compass-strip');
+  private readonly compassMarks = el('div', 'compass-marks');
+  private readonly scaleTicks: { node: HTMLElement; offset: number }[] = [];
+  private readonly hubTick = el('div', 'compass-mark hub');
   private readonly poiTicks: HTMLElement[] = [];
   private readonly objectivePanel = el('div', 'hud-panel hud-right objective-panel');
   private readonly prompt = el('div', 'surface-prompt');
@@ -77,17 +85,25 @@ export class SurfaceHud {
     const meterPanel = el('div', 'hud-panel meter-panel');
     for (const m of Object.values(this.meters)) meterPanel.appendChild(m.row);
     meterPanel.appendChild(this.scanner);
-    this.compass.appendChild(this.hubTick);
-    for (let i = 0; i < poiCount; i++) {
-      const t = el('div', 'compass-tick poi', '◆');
-      this.poiTicks.push(t);
-      this.compass.appendChild(t);
+    for (let deg = 0; deg < 360; deg += COMPASS_STEP_DEG) {
+      const label = SURFACE_UI.cardinals[deg / 45];
+      const major = deg % 90 === 0;
+      const node = el('div', label === undefined || deg % 45 !== 0 ? 'compass-scale' : major ? 'compass-scale cardinal major' : 'compass-scale cardinal');
+      if (label !== undefined && deg % 45 === 0) node.textContent = label;
+      this.scaleTicks.push({ node, offset: (deg * Math.PI) / 180 });
+      this.compassStrip.appendChild(node);
     }
+    this.compassMarks.appendChild(this.hubTick);
+    for (let i = 0; i < poiCount; i++) {
+      const t = el('div', 'compass-mark poi');
+      this.poiTicks.push(t);
+      this.compassMarks.appendChild(t);
+    }
+    this.compass.append(this.compassStrip, el('div', 'compass-needle'), this.compassMarks);
     this.faint.hidden = true;
     this.journal.hidden = true;
     this.root.append(this.journal, 
-      this.staticFx, this.clock, this.compass, meterPanel, this.objectivePanel, this.prompt, this.toasts,
-      el('div', 'hud-controls surface-controls', SURFACE_UI.controls), this.faint, this.dialogHost,
+      this.staticFx, this.clock, this.compass, meterPanel, this.objectivePanel, this.prompt, this.toasts, this.faint, this.dialogHost,
     );
     ui.appendChild(this.root);
   }
@@ -136,20 +152,30 @@ export class SurfaceHud {
     this.clock.dataset.day = String(v.day);
     this.scanner.textContent = `${SURFACE_UI.scanner}: ${v.scannerReady ? 'siap' : SURFACE_UI.scannerCooling}`;
 
-    const place = (tick: HTMLElement, bearing: number, show: boolean): void => {
-      const visible = show && Math.abs(bearing) <= COMPASS_HALF_RAD;
-      tick.style.display = visible ? 'block' : 'none';
-      if (visible) tick.style.left = `${50 + (bearing / COMPASS_HALF_RAD) * 50}%`;
+    const toLeft = (bearing: number): number => 50 + (bearing / COMPASS_HALF_RAD) * 50;
+    for (const t of this.scaleTicks) {
+      const b = wrapPi(v.northBearing + t.offset);
+      const visible = Math.abs(b) <= COMPASS_HALF_RAD;
+      t.node.style.display = visible ? '' : 'none';
+      if (visible) t.node.style.left = `${toLeft(b)}%`;
+    }
+    // Penanda di luar pandangan ditahan di tepi bar dengan panah, sehingga pemain tahu harus berbalik ke mana.
+    const place = (mark: HTMLElement, bearing: number, show: boolean, text: string): void => {
+      mark.style.display = show ? 'flex' : 'none';
+      if (!show) return;
+      const side = bearing < -COMPASS_HALF_RAD ? -1 : bearing > COMPASS_HALF_RAD ? 1 : 0;
+      mark.classList.toggle('edge', side !== 0);
+      mark.dataset.side = String(side);
+      mark.style.left = `${side === 0 ? toLeft(bearing) : side < 0 ? 0 : 100}%`;
+      mark.textContent = side < 0 ? `◂ ${text}` : side > 0 ? `${text} ▸` : text;
     };
-    place(this.hubTick, v.hubBearing, true);
-    this.hubTick.textContent = `▲ ${SURFACE_UI.hub} ${v.hubDistanceM.toFixed(0)}m`;
+    place(this.hubTick, v.hubBearing, true, `${SURFACE_UI.hub} ${v.hubDistanceM.toFixed(0)} m`);
     v.pois.forEach((p, i) => {
       const tick = this.poiTicks[i];
       if (!tick) return;
-      tick.className = `compass-tick poi ${p.bonus ? 'bonus' : ''} ${p.done ? 'done' : ''}`;
-      tick.textContent = `◆ ${p.distanceM.toFixed(0)}m`;
+      tick.className = `compass-mark poi${p.bonus ? ' bonus' : ''}${p.done ? ' done' : ''}`;
       tick.title = p.label;
-      place(tick, p.bearing, p.shown);
+      place(tick, p.bearing, p.shown, `${p.distanceM.toFixed(0)} m`);
     });
   }
 

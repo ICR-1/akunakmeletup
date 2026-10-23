@@ -25,7 +25,7 @@ describe('CursorManager & Smart Auto Toggle Cursor', () => {
     expect(isInteractiveElement(makeEl('button'))).toBe(true);
     expect(isInteractiveElement(makeEl('.dialog'))).toBe(true);
     expect(isInteractiveElement(makeEl('.result-panel'))).toBe(true);
-    expect(isInteractiveElement(makeEl('.audio-controls'))).toBe(true);
+    expect(isInteractiveElement(makeEl('.settings'))).toBe(true);
     expect(isInteractiveElement(makeEl('.modal'))).toBe(true);
     expect(isInteractiveElement(makeEl('.journal-panel'))).toBe(true);
     expect(isInteractiveElement(makeEl('[data-interactive]'))).toBe(true);

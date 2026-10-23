@@ -14,7 +14,7 @@ import { audio } from './audio';
 import { AdaptiveQuality } from './quality';
 import { browserStorage, loadSave, writeSave } from './save';
 import { createGameStore, type Store, type GameState } from './store';
-import { createAudioControls } from '../ui/audioControls';
+import { createSettings } from '../ui/settings';
 import { STRINGS } from './strings';
 import { buildPreloadSteps, runPreload } from './preload';
 import { LoadingScreen } from '../ui/loading';
@@ -127,12 +127,12 @@ export class Game {
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
     overlay.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('button:not(:disabled)') && !(e.target as HTMLElement).closest('.audio-controls')) audio.click();
+      if ((e.target as HTMLElement).closest('button:not(:disabled)') && !(e.target as HTMLElement).closest('.settings')) audio.click();
     }, true);
     this.store.subscribe((state, prev) => {
       if (state.save !== prev.save) writeSave(this.storage, state.save);
     });
-    this.controls = createAudioControls(overlay, save, ({ muted, volume, textScale, shadows, detail, music }) => {
+    this.controls = createSettings(overlay, save, ({ muted, volume, textScale, shadows, detail, music }) => {
       this.applyShadows(shadows);
       const changed = detail !== getDetail();
       setDetail(detail);

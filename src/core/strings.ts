@@ -167,8 +167,6 @@ export const FLIGHT_UI = {
     guide: 'Panduan',
     deviation: 'Simpangan',
   },
-  controls: 'W/S thrust · panah / mouse pitch & yaw · Alt kursor · A/D miring (saat mendarat) · F lepas tahap · Shift boost · Spasi presisi',
-  controlsLanding: 'W Rem retro · S Turun cepat · Tahan SPASI untuk bantalan mulus (< 2 m/s) · A/D Seimbangkan · Shift boost',
   result: {
     perfect: 'Pendaratan mulus!',
     success: 'Pendaratan sukses.',
@@ -213,6 +211,8 @@ export const SURFACE_UI = {
   night: 'MALAM',
   remaining: 'sisa',
   hub: 'Wahana',
+  /** Mata angin tiap 45°, searah jarum jam mulai Utara. */
+  cardinals: ['U', 'TL', 'T', 'TG', 'S', 'BD', 'B', 'BL'],
   objectives: 'Objektif',
   bonus: 'bonus',
   required: 'wajib',
@@ -252,7 +252,6 @@ export const SURFACE_UI = {
     yes: 'Kirim dan akhiri',
     no: 'Kembali bekerja',
   },
-  controls: 'WASD jalan · mouse / panah putar kamera · Alt kursor · E interaksi · R Lunar Cruiser · Q pemindai · Tab jurnal · Shift lari · Spasi lompat',
 } as const;
 
 export const MINIGAME_NAMES: Record<string, string> = {
@@ -354,6 +353,9 @@ export const STORY_UI = {
   modeStoryHint: 'Alur Bulan, Mars, dan Beacon dengan cerita dan progres tersimpan.',
   freeBadge: 'Free Design',
   locked: 'Terkunci: selesaikan misi sebelumnya',
+  lockedAfter: 'Selesaikan misi {prev} untuk membuka',
+  gravity: 'Gravitasi permukaan',
+  budget: 'Budget misi',
   best: 'terbaik',
   start: 'Mulai misi',
   progress: 'Progres',
@@ -370,6 +372,12 @@ export const STORY_UI = {
   detailHigh: 'tinggi',
   detailLow: 'rendah',
   detailTitle: 'Detail model 3D (rendah = low-poly ringan untuk perangkat lemah)',
+  settings: 'Pengaturan',
+  close: 'Tutup',
+  soundEffects: 'Efek suara',
+  volume: 'Volume',
+  display: 'Tampilan',
+  textSize: 'Ukuran teks',
   on: 'hidup',
   off: 'mati',
 } as const;

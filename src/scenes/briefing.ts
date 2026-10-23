@@ -129,22 +129,40 @@ export class BriefingScene extends BaseScene {
     }
     menu.append(tabs, el('p', 'mode-hint', rules.storyDialogs ? STORY_UI.modeStoryHint : STORY_UI.modeFreeHint));
     menu.appendChild(el('h2', '', STORY_UI.chooseDestination));
-    for (const dest of this.ctx.catalog.destinations.filter((d) => d.mvp)) {
+    const dests = this.ctx.catalog.destinations.filter((d) => d.mvp);
+    dests.forEach((dest, i) => {
       const open = selectable.includes(dest.id);
       const stars = save.stars[dest.id] ?? 0;
       const best = save.bestScore[dest.id];
       const button = el('button', 'choice dest-button');
       button.type = 'button';
       button.disabled = !open;
-      button.appendChild(el('span', 'choice-name', `${dest.name}  ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`));
-      button.appendChild(el('span', 'choice-sub', open
-        ? `g ${dest.gravity} m/s² · budget ${dest.budgetMusd} MUSD${best !== undefined ? ` · ${STORY_UI.best} ${best}` : ''}`
-        : STORY_UI.locked));
+      const name = el('span', 'choice-name', dest.name);
+      const starRow = el('span', 'dest-stars');
+      starRow.setAttribute('aria-label', `${stars}/3`);
+      for (let s = 0; s < 3; s++) starRow.appendChild(el('span', s < stars ? 'dest-star on' : 'dest-star', '★'));
+      name.appendChild(starRow);
+      button.appendChild(name);
+      const sub = el('span', 'choice-sub dest-chips');
+      if (open) {
+        const chip = (cls: string, text: string, title?: string): void => {
+          const c = el('span', `dest-chip ${cls}`, text);
+          if (title) c.title = title;
+          sub.appendChild(c);
+        };
+        chip('chip-gravity', `${dest.gravity} m/s²`, STORY_UI.gravity);
+        chip('chip-budget', `${dest.budgetMusd} MUSD`, STORY_UI.budget);
+        if (best !== undefined) chip('chip-best', `${STORY_UI.best} ${best}`);
+      } else {
+        const prev = dests[i - 1];
+        sub.textContent = prev ? STORY_UI.lockedAfter.replace('{prev}', prev.name) : STORY_UI.locked;
+      }
+      button.appendChild(sub);
       button.addEventListener('mouseenter', () => { if (open) this.setFocus(focusForDestination(dest.id)); });
       button.addEventListener('mouseleave', () => { if (!this.busy) this.setFocus('overview'); });
       button.addEventListener('click', () => this.startBriefing(ui, dest.id));
       menu.appendChild(button);
-    }
+    });
     if (rules.recordsProgress) {
       const beacons = save.beacons.length > 0 ? save.beacons.map((b) => b.replace('beacon_', '')).join(', ') : STORY_UI.none;
       menu.appendChild(el('div', 'progress-line', `${STORY_UI.progress}: ${STORY_UI.sciencePoints} ${save.sciencePoints} · ${STORY_UI.beacons}: ${beacons}`));

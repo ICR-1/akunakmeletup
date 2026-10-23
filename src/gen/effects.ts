@@ -11,7 +11,7 @@ export class ParticleField {
   private readonly life: Float32Array;
   private cursor = 0;
 
-  constructor(private readonly count: number, size: number) {
+  constructor(private readonly count: number, size: number, soft = false) {
     this.pos = new Float32Array(count * 3).fill(-1e5);
     this.col = new Float32Array(count * 3);
     this.vel = new Float32Array(count * 3);
@@ -23,7 +23,7 @@ export class ParticleField {
     geo.setAttribute('color', new THREE.BufferAttribute(this.col, 3));
     const mat = new THREE.PointsMaterial({
       size, sizeAttenuation: true, vertexColors: true, transparent: true, depthWrite: false,
-      blending: THREE.AdditiveBlending, fog: false,
+      blending: THREE.AdditiveBlending, fog: false, map: soft ? softPuffTexture() : null,
     });
     this.points = new THREE.Points(geo, mat);
     this.points.frustumCulled = false;
@@ -60,44 +60,129 @@ export class ParticleField {
   }
 }
 
-/** Nyala mesin: dua kerucut bersarang (jingga dan kuning), skala mengikuti throttle. */
+const FLAME_VERT = /* glsl */ `
+varying vec2 vUv;
+varying float vFacing;
+void main() {
+  vUv = uv;
+  vec4 mv = modelViewMatrix * vec4(position, 1.0);
+  vec3 n = normalize(normalMatrix * normal);
+  vFacing = abs(dot(n, normalize(-mv.xyz)));
+  gl_Position = projectionMatrix * mv;
+}`;
+
+const FLAME_FRAG = /* glsl */ `
+uniform float uTime;
+uniform float uThrottle;
+uniform float uIntensity;
+uniform float uDiamonds;
+uniform vec3 uHot;
+uniform vec3 uMid;
+uniform vec3 uTip;
+varying vec2 vUv;
+varying float vFacing;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float noise(vec2 p) {
+  vec2 i = floor(p), f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+}
+void main() {
+  float t = vUv.y;
+  // Turbulensi mengalir menjauhi nozzle; makin ke ujung makin acak.
+  float n = noise(vec2(vUv.x * 9.0, t * 7.0 - uTime * 9.0)) * 0.6 + noise(vec2(vUv.x * 21.0, t * 15.0 - uTime * 17.0)) * 0.4;
+  float along = pow(1.0 - t, 1.4) * smoothstep(0.0, 0.04, t);
+  float edge = pow(vFacing, 1.6);
+  float body = along * edge * mix(1.0, n * 1.6, t * 0.85);
+  // Shock diamond: cincin terang berulang di dekat nozzle saat throttle tinggi.
+  float dia = pow(abs(sin(t * 3.14159 * 6.0)), 10.0) * (1.0 - smoothstep(0.1, 0.6, t)) * uDiamonds * uThrottle;
+  vec3 col = mix(uHot, uMid, smoothstep(0.0, 0.35, t));
+  col = mix(col, uTip, smoothstep(0.35, 1.0, t));
+  col += uHot * dia * 1.5;
+  gl_FragColor = vec4(col * (body + dia * edge) * uIntensity, 1.0);
+  #include <tonemapping_fragment>
+  #include <colorspace_fragment>
+}`;
+
+/** Profil nyala: menggembung sedikit setelah nozzle lalu meruncing ke ujung (uv.y 0 = nozzle, 1 = ujung). */
+function flameGeometry(radius: number, segments: number): THREE.LatheGeometry {
+  const pts: THREE.Vector2[] = [];
+  const steps = 14;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const r = radius * (0.85 + 0.35 * Math.sin(Math.min(1, t * 2.2) * Math.PI * 0.5)) * Math.pow(1 - t, 0.75);
+    pts.push(new THREE.Vector2(Math.max(r, radius * 0.01), -t));
+  }
+  return new THREE.LatheGeometry(pts, segments);
+}
+
+function flameMaterial(hot: number, mid: number, tip: number, intensity: number, diamonds: number): THREE.ShaderMaterial {
+  return new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 }, uThrottle: { value: 0 }, uIntensity: { value: intensity }, uDiamonds: { value: diamonds },
+      uHot: { value: new THREE.Color(hot) }, uMid: { value: new THREE.Color(mid) }, uTip: { value: new THREE.Color(tip) },
+    },
+    vertexShader: FLAME_VERT, fragmentShader: FLAME_FRAG,
+    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,
+  });
+}
+
+/**
+ * Nyala mesin: selubung luar jingga yang bergolak, inti putih-biru dengan shock diamond, dan pendar bulat di nozzle.
+ * Grup tidak diskalakan; tiap anak diskalakan sendiri agar pendar (sprite) tidak ikut memanjang.
+ */
 export function createFlame(radius: number): THREE.Group {
   const g = new THREE.Group();
   g.name = 'flame';
-  const make = (r: number, color: number, opacity: number): THREE.Mesh => {
-    const geo = new THREE.ConeGeometry(r, 1, 7, 1, true);
-    geo.translate(0, -0.5, 0);
-    const mat = new THREE.MeshBasicMaterial({
-      color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false,
-    });
-    return new THREE.Mesh(geo, mat);
-  };
-  g.add(make(radius, 0xff5a12, 0.55), make(radius * 0.5, 0xffd27a, 0.7));
+  const outer = new THREE.Mesh(flameGeometry(radius, 16), flameMaterial(0xffc27a, 0xff6a1a, 0x8a1c04, 1.1, 0));
+  const core = new THREE.Mesh(flameGeometry(radius * 0.45, 12), flameMaterial(0xf2f8ff, 0xffe2a0, 0xff8a2a, 1.6, 1));
+  core.renderOrder = 1;
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: softPuffTexture(), color: 0xffa04a, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+  }));
+  glow.position.y = -radius * 0.3;
+  glow.userData.base = radius * 5;
+  g.add(outer, core, glow);
+  g.userData.time = 0;
   g.visible = false;
   return g;
 }
 
-const FLAME_OUTER_LOW = new THREE.Color(0xff5a12);
-const FLAME_OUTER_HIGH = new THREE.Color(0xffb36b);
-const FLAME_INNER_LOW = new THREE.Color(0xffd27a);
-const FLAME_INNER_HIGH = new THREE.Color(0xe6f4ff);
+const FLAME_OUTER_MID_LOW = new THREE.Color(0xff5a12);
+const FLAME_OUTER_MID_HIGH = new THREE.Color(0xff8a3a);
+const FLAME_CORE_HOT_LOW = new THREE.Color(0xffe6a8);
+const FLAME_CORE_HOT_HIGH = new THREE.Color(0xe6f4ff);
+const FLAME_STEP = 1 / 60;
 
 export function setFlame(flame: THREE.Group, throttle01: number, length: number, flicker: number): void {
-  const [outer, inner] = flame.children as THREE.Mesh[];
-  if (outer && inner) {
-    // Throttle tinggi: api lebih putih-kebiruan dan terang.
-    (outer.material as THREE.MeshBasicMaterial).color.copy(FLAME_OUTER_LOW).lerp(FLAME_OUTER_HIGH, throttle01);
-    (inner.material as THREE.MeshBasicMaterial).color.copy(FLAME_INNER_LOW).lerp(FLAME_INNER_HIGH, throttle01);
-  }
   flame.visible = throttle01 > 0.01;
-  const s = (0.35 + throttle01 * 0.65) * length * (0.9 + flicker * 0.2);
-  flame.scale.set(1, s, 1);
+  if (!flame.visible) return;
+  const [outer, core, glow] = flame.children as [THREE.Mesh, THREE.Mesh, THREE.Sprite];
+  flame.userData.time += FLAME_STEP;
+  const time = flame.userData.time as number;
+  const s = (0.35 + throttle01 * 0.65) * length * (0.92 + flicker * 0.16);
+  const w = 0.8 + throttle01 * 0.3 + flicker * 0.05;
+  outer.scale.set(w, s, w);
+  core.scale.set(w, s * 0.55, w);
+  for (const m of [outer, core]) {
+    const u = (m.material as THREE.ShaderMaterial).uniforms;
+    u.uTime.value = time;
+    u.uThrottle.value = throttle01;
+  }
+  // Throttle tinggi: api lebih putih-kebiruan dan terang.
+  const ou = (outer.material as THREE.ShaderMaterial).uniforms;
+  (ou.uMid.value as THREE.Color).copy(FLAME_OUTER_MID_LOW).lerp(FLAME_OUTER_MID_HIGH, throttle01);
+  const cu = (core.material as THREE.ShaderMaterial).uniforms;
+  (cu.uHot.value as THREE.Color).copy(FLAME_CORE_HOT_LOW).lerp(FLAME_CORE_HOT_HIGH, throttle01);
+  const gs = (glow.userData.base as number) * (0.6 + throttle01 * 0.5) * (0.9 + flicker * 0.2);
+  glow.scale.set(gs, gs, 1);
+  (glow.material as THREE.SpriteMaterial).opacity = 0.35 + throttle01 * 0.45;
 }
 
 export function disposeFlame(flame: THREE.Group): void {
   flame.traverse((o) => {
     const m = o as THREE.Mesh;
-    m.geometry?.dispose();
+    if (!(o instanceof THREE.Sprite)) m.geometry?.dispose();
     (m.material as THREE.Material | undefined)?.dispose();
   });
 }

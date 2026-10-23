@@ -198,7 +198,7 @@ export class FlightScene extends BaseScene {
     this.terrain = createTerrain({ seed: cfg.seed, palette: dest.palette, amplitude: style.amplitude, craterCount: style.craterCount });
     this.terrain.mesh.visible = false;
     this.scene.add(this.terrain.mesh);
-    this.smoke = new ParticleField(500, 0.7);
+    this.smoke = new ParticleField(500, 1.6, true);
     this.dust = new ParticleField(400, 0.9);
     this.scene.add(this.smoke.points, this.dust.points);
 

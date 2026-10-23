@@ -288,6 +288,16 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
     - *Favicon & Layar Memuat (`index.html`):* Ditambahkan favicon 32×32 mandiri dan logo roket mengambang beranimasi halus (`rocket-float`) pada layar pembuka `#loading`.
     - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
 
+136. **Efek api roket berbasis shader prosedural (permintaan pemilik proyek):**
+    - Dua kerucut polos diganti `ShaderMaterial` aditif pada profil `LatheGeometry` yang menggembung lalu meruncing: selubung luar jingga bergolak (noise nilai bergerak menjauhi nozzle), inti putih-biru dengan *shock diamond* yang muncul saat throttle tinggi, tepi lembut dari sudut pandang (tanpa garis kerucut keras), serta pendar sprite di nozzle. Semua prosedural, tanpa berkas tekstur.
+    - Waktu animasi maju tetap 1/60 s per panggilan `setFlame` (deterministik, tanpa `Math.random`). Grup api tidak lagi diskalakan; tiap anak diskalakan sendiri agar sprite pendar tidak memanjang.
+    - Partikel buang roket/lander memakai tekstur bulat lembut (`ParticleField(..., soft)`) alih-alih titik kotak. Draw call bertambah satu per nyala (sprite), tetap jauh di bawah anggaran.
+
+137. **Panel Pengaturan di kiri bawah (permintaan pemilik proyek):**
+    - Bilah kontrol suara di kanan bawah dihapus. Gantinya tombol roda gigi bulat di kiri bawah (`src/ui/settings.ts`, menggantikan `audioControls.ts`) yang membuka panel *Pengaturan* berisi dua bagian: **Suara** (efek suara hidup/mati, musik hidup/mati, slider volume dengan persen) dan **Tampilan** (ukuran teks, bayangan, detail model). Semua pengaturan lama dipindah ke panel ini agar tidak ada yang hilang; penyimpanan ke `localStorage` tidak berubah.
+    - Panel ditutup dengan tombol ×, tombol Escape, atau klik di luar panel. Tombol keyboard yang ditekan saat fokus di panel tidak diteruskan ke kontrol game.
+    - Panel kiri Desain dan meter permukaan dinaikkan (`bottom: 76px`) agar tidak tertutup tombol roda gigi; panel kanan Desain kembali ke `bottom: 20px` karena bilah kanan bawah sudah tidak ada.
+
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.

@@ -28,7 +28,6 @@ export class FlightHud {
   private readonly speedGauge = el('div', 'gauge gauge-speed');
   private readonly speedPointer = el('div', 'speed-pointer');
   private readonly cushionBadge = el('div', 'cushion-badge', 'BANTUAN PENDARATAN AKTIF (< 2 m/s)');
-  private readonly controlsEl = el('div', 'hud-controls', FLIGHT_UI.controls);
   private readonly result = el('div', 'result-panel');
   private lastFuelStart = 0;
 
@@ -108,7 +107,7 @@ export class FlightHud {
     this.speedGauge.append(z1, z2, z3, z4, this.speedPointer);
     this.prompt.hidden = true;
     this.cushionBadge.hidden = true;
-    bottom.append(this.prompt, this.pitchGauge, this.reticle, this.cushionBadge, this.speedGauge, this.controlsEl);
+    bottom.append(this.prompt, this.pitchGauge, this.reticle, this.cushionBadge, this.speedGauge);
     return bottom;
   }
 
@@ -172,7 +171,6 @@ export class FlightHud {
     this.reticle.hidden = sim.phase !== 'transfer';
     this.speedGauge.hidden = !inLanding;
     this.cushionBadge.hidden = !sim.landingCushionActive;
-    this.controlsEl.textContent = inLanding ? FLIGHT_UI.controlsLanding : FLIGHT_UI.controls;
     if (showPitch) {
       const guide = sim.phase === 'orbit' ? guidePitchDeg(1) : guidePitchDeg(sim.progress);
       this.pitchNow.style.left = `${(sim.pitchDeg / FLIGHT.maxPitchDeg) * 100}%`;
