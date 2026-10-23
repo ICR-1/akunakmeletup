@@ -701,7 +701,7 @@ button.launch-button:disabled::before {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  width: min(720px, 76vw);
+  width: min(720px, calc(100vw / var(--ui-scale, 1) - 2 * (290px + var(--hud-edge) + var(--hud-gap))));
 }
 .hud-phase {
   display: inline-flex;
@@ -949,7 +949,7 @@ button.launch-button:disabled::before {
   top: 98px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(520px, 60vw);
+  width: min(520px, calc(100vw - 2 * (310px + var(--hud-edge) + var(--hud-gap))));
   height: 58px;
   pointer-events: none;
 }
@@ -1371,8 +1371,8 @@ button.launch-button:disabled::before {
 
 .nova-bubble {
   position: absolute;
-  top: 140px;
-  left: 18px;
+  top: 168px; /* di bawah pita kompas Surface (98px + 58px + gap) */
+  left: var(--hud-edge);
   width: 330px;
   display: grid;
   grid-template-columns: 58px 1fr;
@@ -1789,9 +1789,9 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 .label-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 .scene-ui-flight .nova-bubble {
-  top: 290px;
-  bottom: auto;
-  left: 18px;
+  top: auto;
+  bottom: 84px; /* di atas tombol pengaturan */
+  left: var(--hud-edge);
   width: 290px;
 }
 
@@ -2110,6 +2110,11 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 /* --- Penyesuaian Responsif & Anti-Tabrakan Elemen --- */
 @media (max-width: 1200px) {
   .panel { width: 310px; padding: 14px 14px; }
+}
+
+@media (max-width: 1100px) {
+  .hud-right { width: 240px; }
+  .hud-top { width: min(720px, calc(100vw / var(--ui-scale, 1) - 2 * (240px + var(--hud-edge) + var(--hud-gap)))); }
 }
 
 @media (max-width: 860px) {
