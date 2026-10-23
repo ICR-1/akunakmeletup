@@ -285,12 +285,16 @@ export class DesignPanel {
 
   private buildInspector(): HTMLElement {
     const root = el('aside', 'panel panel-right');
-    root.appendChild(this.badge);
+    const head = el('div', 'panel-head');
+    const scroll = el('div', 'panel-scroll');
+    const foot = el('div', 'panel-foot');
+    head.appendChild(this.badge);
     this.autoFix.type = 'button';
+    this.autoFix.title = STUDENT_UI.autoFixButton;
     this.autoFix.addEventListener('click', () => {
       this.handlers.change((c) => getPresetMission(c.destinationId, 'standard', c.seed));
     });
-    root.appendChild(this.autoFix);
+    head.appendChild(this.autoFix);
 
     const ind = section(DESIGN.indicators);
     ind.body.append(this.indicators.root, this.metrics);
@@ -302,7 +306,9 @@ export class DesignPanel {
     nova.body.appendChild(this.nova);
     this.launch.type = 'button';
     this.launch.addEventListener('click', () => { if (!this.launch.disabled) this.handlers.launch(); });
-    root.append(ind.root, obj.root, stages.root, nova.root, this.launch, el('p', 'hint', DESIGN.hint));
+    scroll.append(ind.root, obj.root, stages.root, nova.root);
+    foot.append(this.launch, el('p', 'hint', DESIGN.hint));
+    root.append(head, scroll, foot);
     return root;
   }
 
