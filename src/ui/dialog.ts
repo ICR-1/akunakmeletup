@@ -136,7 +136,7 @@ export function showDialogSequence(host: HTMLElement, lines: DialogLine[], onDon
   const body = el('div', 'story-body');
   const name = el('div', 'dialog-name');
   const text = el('p', 'dialog-text story-text');
-  const next = el('button', 'launch-button', STORY_UI.next);
+  const next = el('button', 'dialog-next', STORY_UI.next);
   const skip = el('button', 'choice story-skip', STORY_UI.skip);
   next.type = skip.type = 'button';
   body.append(name, text, next);

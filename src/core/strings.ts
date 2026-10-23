@@ -383,6 +383,9 @@ export const STORY_UI = {
 } as const;
 
 export const REVIEW_UI = {
+  emptyTitle: 'Belum ada misi',
+  emptyBody: 'Rakit wahana dan luncurkan misi pertamamu untuk melihat skor, bintang, dan medali di sini.',
+  toDesign: 'Ke Desain Misi',
   title: 'Review misi',
   success: 'Misi berhasil',
   failure: 'Misi gagal',

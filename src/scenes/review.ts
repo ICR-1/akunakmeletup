@@ -42,8 +42,14 @@ export class ReviewScene extends BaseScene {
   protected onEnter(ui: HTMLElement): void {
     const state = this.ctx.store.get();
     const outcome = state.outcome;
+    this.gem.visible = outcome !== null && outcome !== undefined;
     if (!outcome) {
-      ui.appendChild(el('div', 'briefing-menu centered', 'Belum ada hasil misi. Mulai dari Desain.'));
+      const empty = el('div', 'briefing-menu centered review-empty');
+      const go = el('button', 'launch-button', REVIEW_UI.toDesign);
+      go.type = 'button';
+      go.addEventListener('click', () => this.ctx.go('design'));
+      empty.append(el('h2', '', REVIEW_UI.emptyTitle), el('p', '', REVIEW_UI.emptyBody), go);
+      ui.appendChild(empty);
       return;
     }
     const config = state.mission;

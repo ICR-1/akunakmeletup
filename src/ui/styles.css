@@ -1372,7 +1372,26 @@ button.launch-button:disabled::before {
   word-break: break-word;
   overflow-wrap: break-word;
 }
-.story-body .launch-button { width: auto; padding: 8px 24px; margin-top: 0; }
+button.dialog-next {
+  align-self: flex-end;
+  width: auto;
+  min-width: 160px;
+  padding: var(--sp-2) var(--sp-6);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #064e3b;
+  background: linear-gradient(135deg, #5eead4 0%, #34d399 50%, #10b981 100%);
+  border: 2px solid #a7f3d0;
+  border-radius: var(--r-lg);
+  cursor: pointer;
+  box-shadow: 0 5px 0 #047857, 0 8px 16px rgba(16, 185, 129, 0.35);
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+button.dialog-next:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #047857, 0 12px 22px rgba(16, 185, 129, 0.45); filter: brightness(1.08); }
+button.dialog-next:active { transform: translateY(3px); box-shadow: 0 2px 0 #047857; }
 
 .nova-bubble {
   position: absolute;
@@ -1611,6 +1630,8 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 .chip-best::before { background-image: var(--icon-star); }
 .progress-line {
   margin-top: 12px;
+  padding-top: var(--sp-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: var(--fs-sm);
   font-weight: 700;
   color: #bae6fd;
@@ -2139,3 +2160,8 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
     margin: 0 auto;
   }
 }
+
+.review-empty { text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--sp-3); }
+.review-empty h2 { margin: 0; }
+.review-empty p { margin: 0; font-size: var(--fs-lg); line-height: 1.5; color: #cbd5e1; }
+.review-empty button.launch-button { width: auto; min-width: 200px; margin-top: var(--sp-2); }

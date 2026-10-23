@@ -96,6 +96,8 @@ try {
     await page.setViewport({ width: w, height: h });
     await page.goto(PAGE_URL, { waitUntil: 'load' });
     await sleep(LOAD_WAIT_MS);
+    const loadingGone = await page.waitForFunction(() => !document.getElementById('loading'), { timeout: 60000 }).then(() => true, () => false);
+    if (!loadingGone) (report[`briefing-${w}${suffix}`] ??= []).push('LOADING_STUCK #loading masih ada di DOM setelah pemuatan');
     if (scale !== 1) await page.evaluate((s) => document.documentElement.style.setProperty('--ui-scale', String(s)), scale);
     for (const s of SCENES) {
       const key = `${s}-${w}${suffix}`;
@@ -119,7 +121,7 @@ writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 1));
 let failed = false;
 for (const [key, list] of Object.entries(report)) {
   if (list.length) console.log(`${key}: ${list.length}`);
-  for (const l of list) if (/^(OVERLAP|ESCAPES|OFFSCREEN|SWITCH_FAILED|PAGEERROR)/.test(l)) { failed = true; console.log(`  ${l}`); }
+  for (const l of list) if (/^(OVERLAP|ESCAPES|OFFSCREEN|SWITCH_FAILED|PAGEERROR|LOADING_STUCK)/.test(l)) { failed = true; console.log(`  ${l}`); }
 }
 if (logs.length) console.log('LOGS\n' + [...new Set(logs)].slice(0, 30).join('\n'));
 console.log(failed ? 'AUDIT: ada temuan' : 'AUDIT: bersih');
