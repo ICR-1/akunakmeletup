@@ -14,6 +14,7 @@ import { resolveAssembly } from '../rules/catalog';
 import { preflight } from '../rules/preflight';
 import { modeRules, selectableDestinationIds } from '../rules/progress';
 import type { MissionConfig } from '../rules/types';
+import { clampToZone } from '../ui/labelLayout';
 import { DesignPanel } from '../ui/panels';
 import { BaseScene } from './baseScene';
 
@@ -303,17 +304,38 @@ export class DesignScene extends BaseScene {
     if (this.refAstronaut) this.astronautLabel = { node: make(DESIGN.astronautScale, 'lander-label'), anchor: this.refAstronaut.root, lift: 1.9 };
   }
 
+  /** Zona bebas (px CSS) di antara panel kiri dan kanan, dengan celah --hud-gap. */
+  private freeZone(zoom: number): { min: number; max: number } {
+    const root = this.labelLayer?.parentElement;
+    const gap = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--hud-gap')) || 12;
+    let min = 0, max = window.innerWidth / zoom;
+    const left = root?.querySelector('.panel-left')?.getBoundingClientRect();
+    const right = root?.querySelector('.panel-right')?.getBoundingClientRect();
+    if (left && left.width > 0) min = left.right / zoom + gap;
+    if (right && right.width > 0) max = right.left / zoom - gap;
+    return { min, max };
+  }
+
   /** Proyeksikan jangkar 3D ke layar dan tempatkan label (memperhitungkan zoom UI). */
   private placeLabels(): void {
     const w = window.innerWidth, h = window.innerHeight;
     const zoom = Number(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
     this.camera.updateMatrixWorld();
     this.right.setFromMatrixColumn(this.camera.matrixWorld, 0);
+    const zone = this.freeZone(zoom);
     const put = (label: StageLabel, world: THREE.Vector3): void => {
       const v = this.tmp.copy(world).project(this.camera);
-      const visible = v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
+      let visible = v.z < 1 && Math.abs(v.x) < 1.2 && Math.abs(v.y) < 1.2;
+      let left = ((v.x * 0.5 + 0.5) * w) / zoom;
+      if (visible) {
+        // Label diposisikan dari tepi kiri; jepit titik tengahnya ke zona di antara panel.
+        const lw = label.node.offsetWidth;
+        const c = clampToZone(left + lw / 2, lw, zone.min, zone.max);
+        if (c === null) visible = false;
+        else left = c - lw / 2;
+      }
       label.node.style.display = visible ? 'block' : 'none';
-      if (visible) label.node.style.transform = `translate(${((v.x * 0.5 + 0.5) * w) / zoom}px, ${((-v.y * 0.5 + 0.5) * h) / zoom}px) translateY(-50%)`;
+      if (visible) label.node.style.transform = `translate(${left}px, ${((-v.y * 0.5 + 0.5) * h) / zoom}px) translateY(-50%)`;
     };
     const reach = (this.rocket?.radius ?? 1) * 1.2 + LABEL_GAP;
     const base = new THREE.Vector3();

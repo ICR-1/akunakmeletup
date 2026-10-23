@@ -9,6 +9,7 @@ import { Orrery } from '../gen/orrery';
 import { focusForDestination, type OrreryFocus } from '../gen/solarSystemData';
 import { showDialogSequence } from '../ui/dialog';
 import { el } from '../ui/dom';
+import { nudgeApart, type LabelBox } from '../ui/labelLayout';
 import { BaseScene } from './baseScene';
 
 // Bingkai tampilan umum digeser ke kiri agar tata surya tampak di sebelah kanan menu.
@@ -16,6 +17,7 @@ const OVERVIEW_TARGET = new THREE.Vector3(-14, 0, 0);
 const OVERVIEW_POS = new THREE.Vector3(-14, 36, 66);
 const CAM_FOLLOW = 2.4;
 const FOCUS_DIST: Record<OrreryFocus, number> = { overview: 0, earth: 8, mars: 6.5 };
+const LABEL_GAP_PX = 4;
 const LABEL_LIFT = 1.7;
 
 /** Briefing: tata surya interaktif, intro cerita (sekali), pilih tujuan yang terbuka, dialog Dr. Sekar, dan tutorial NOVA. */
@@ -24,6 +26,8 @@ export class BriefingScene extends BaseScene {
   private orrery: Orrery | null = null;
   private labelLayer: HTMLElement | null = null;
   private labelNodes = new Map<string, HTMLElement>();
+  /** Ukuran label (px CSS) diukur sekali, bukan tiap frame. */
+  private labelSize = new Map<string, { w: number; h: number }>();
   private focus: OrreryFocus = 'overview';
   private readonly camPos = OVERVIEW_POS.clone();
   private readonly camTarget = new THREE.Vector3();
@@ -69,6 +73,7 @@ export class BriefingScene extends BaseScene {
     this.orrery = null;
     this.labelLayer = null;
     this.labelNodes.clear();
+    this.labelSize.clear();
   }
 
   /** Buat label DOM untuk planet yang sudah siap (nama saja; tanpa fakta sains tambahan). */
@@ -80,6 +85,8 @@ export class BriefingScene extends BaseScene {
       const node = el('div', 'stage-label planet-label', l.name);
       layer.appendChild(node);
       this.labelNodes.set(l.key, node);
+      const w = node.offsetWidth, h = node.offsetHeight;
+      if (w > 0 && h > 0) this.labelSize.set(l.key, { w, h });
     }
   }
 
@@ -95,6 +102,7 @@ export class BriefingScene extends BaseScene {
     const zoom = Number(getComputedStyle(document.documentElement).getPropertyValue('--ui-scale')) || 1;
     this.camera.updateMatrixWorld();
     this.up.setFromMatrixColumn(this.camera.matrixWorld, 1);
+    const shown: { node: HTMLElement; box: LabelBox }[] = [];
     for (const l of this.orrery.labels) {
       const node = this.labelNodes.get(l.key);
       if (!node) continue;
@@ -103,8 +111,21 @@ export class BriefingScene extends BaseScene {
       this.tmp.project(this.camera);
       const visible = this.labelVisible(l.key) && this.tmp.z < 1 && Math.abs(this.tmp.x) < 1.1 && Math.abs(this.tmp.y) < 1.1;
       node.style.display = visible ? 'block' : 'none';
-      if (visible) node.style.transform = `translate(${((this.tmp.x * 0.5 + 0.5) * w) / zoom}px, ${((-this.tmp.y * 0.5 + 0.5) * h) / zoom}px) translate(-50%, -100%)`;
+      if (!visible) continue;
+      let size = this.labelSize.get(l.key);
+      if (!size) {
+        size = { w: node.offsetWidth, h: node.offsetHeight };
+        if (size.w > 0 && size.h > 0) this.labelSize.set(l.key, size);
+      }
+      shown.push({
+        node,
+        box: { x: ((this.tmp.x * 0.5 + 0.5) * w) / zoom, y: ((-this.tmp.y * 0.5 + 0.5) * h) / zoom, w: size.w, h: size.h },
+      });
     }
+    const shifts = nudgeApart(shown.map((s) => s.box), LABEL_GAP_PX);
+    shown.forEach((s, i) => {
+      s.node.style.transform = `translate(${s.box.x}px, ${s.box.y + shifts[i]}px) translate(-50%, -100%)`;
+    });
   }
 
   private renderMenu(ui: HTMLElement): void {
