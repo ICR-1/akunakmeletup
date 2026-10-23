@@ -112,6 +112,8 @@ export class Game {
     }
     this.updatePerf(rawDt);
     if (import.meta.env.DEV) this.handleSceneKeys();
+    // Selama pudar berjalan, tombol yang ditekan tidak boleh memicu aksi di scene lama/baru.
+    if (this.transition.busy) this.input.clear();
     this.accumulator += frameDt;
     while (this.accumulator >= FIXED_DT) {
       this.scenes.update(FIXED_DT);
@@ -119,8 +121,19 @@ export class Game {
     }
     // Pudar berjalan di waktu nyata (frameDt), tidak ikut langkah tetap scene.
     const fade = this.transition.update(frameDt);
-    if (fade.switchTo) this.scenes.switchTo(fade.switchTo);
-    if (this.fadeEl) this.fadeEl.style.opacity = String(fade.opacity);
+    if (fade.switchTo) {
+      try {
+        this.scenes.switchTo(fade.switchTo);
+      } catch (e) {
+        // Gagal masuk scene tidak boleh mematikan loop atau menyisakan layar gelap.
+        console.error('Perpindahan scene gagal:', e);
+      }
+    }
+    if (this.fadeEl) {
+      this.fadeEl.style.opacity = String(fade.opacity);
+      // Blokir klik selama pudar agar scene lama tidak bisa dipicu dua kali.
+      this.fadeEl.style.pointerEvents = this.transition.busy ? 'auto' : 'none';
+    }
     this.scenes.render();
     requestAnimationFrame((t) => this.frame(t));
   }

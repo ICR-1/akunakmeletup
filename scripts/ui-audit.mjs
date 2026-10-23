@@ -75,7 +75,10 @@ function collectIssues() {
       if (ox > 4 && oy > 4) issues.push(`OVERLAP ${name(a)} x ${name(b)} (${Math.round(ox)}x${Math.round(oy)})`);
     }
   }
-  return [...new Set(issues)].slice(0, 60);
+  const blocking = /^(OVERLAP|ESCAPES|OFFSCREEN)/;
+  const uniq = [...new Set(issues)];
+  // Temuan yang menggagalkan audit didahulukan agar tidak terpotong oleh temuan lain.
+  return [...uniq.filter((i) => blocking.test(i)), ...uniq.filter((i) => !blocking.test(i))].slice(0, 60);
 }
 
 mkdirSync(OUT, { recursive: true });

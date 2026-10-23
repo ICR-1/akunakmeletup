@@ -704,7 +704,7 @@ button.launch-button:disabled::before {
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  width: min(720px, calc(100vw / var(--ui-scale, 1) - 2 * (290px + var(--hud-edge) + var(--hud-gap))));
+  width: min(720px, max(260px, calc(100vw / var(--ui-scale, 1) - 2 * (290px + var(--hud-edge) + var(--hud-gap)))));
 }
 .hud-phase {
   display: inline-flex;
@@ -2146,7 +2146,7 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 
 @media (max-width: 1100px) {
   .hud-right { width: 240px; }
-  .hud-top { width: min(720px, calc(100vw / var(--ui-scale, 1) - 2 * (240px + var(--hud-edge) + var(--hud-gap)))); }
+  .hud-top { width: min(720px, max(260px, calc(100vw / var(--ui-scale, 1) - 2 * (240px + var(--hud-edge) + var(--hud-gap))))); }
 }
 
 @media (max-width: 860px) {
@@ -2173,10 +2173,11 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 .review-empty button.launch-button { width: auto; min-width: 200px; margin-top: var(--sp-2); }
 
 /* Tooltip istilah sains (elemen bersama di body, di luar zoom overlay) */
-.has-tooltip { text-decoration: underline dashed; text-underline-offset: 3px; cursor: help; }
+.has-tooltip { text-decoration: underline dashed; text-underline-offset: 3px; cursor: help; pointer-events: auto; }
 .tooltip {
   position: fixed;
-  z-index: 1000;
+  z-index: 950;
+  zoom: var(--ui-scale, 1);
   max-width: 260px;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-md);
@@ -2190,7 +2191,7 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 }
 .tooltip strong { display: block; margin-bottom: var(--sp-1); font-size: var(--fs-md); }
 
-/* Pudar antar-scene: opacity diatur dari JS (game.ts); tidak pernah menghalangi klik. */
+/* Pudar antar-scene: opacity dan pointer-events diatur dari JS (game.ts): memblokir klik hanya selama transisi berjalan. */
 #scene-fade {
   position: fixed;
   inset: 0;

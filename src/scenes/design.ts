@@ -64,6 +64,7 @@ export class DesignScene extends BaseScene {
   private landerKey = '';
   private labelLayer: HTMLElement | null = null;
   private labels: StageLabel[] = [];
+  private readonly labelWidths = new WeakMap<HTMLElement, number>();
   private landerLabel: StageLabel | null = null;
   /** Astronot acuan skala di samping lander (skala sama dengan di permukaan). */
   private refAstronaut: AstronautRig | null = null;
@@ -329,7 +330,9 @@ export class DesignScene extends BaseScene {
       let left = ((v.x * 0.5 + 0.5) * w) / zoom;
       if (visible) {
         // Label diposisikan dari tepi kiri; jepit titik tengahnya ke zona di antara panel.
-        const lw = label.node.offsetWidth;
+        // Label tersembunyi terukur 0: pakai lebar terakhir yang valid agar jepitan tidak berhisteresis.
+        const lw = label.node.offsetWidth || this.labelWidths.get(label.node) || 0;
+        if (lw > 0) this.labelWidths.set(label.node, lw);
         const c = clampToZone(left + lw / 2, lw, zone.min, zone.max);
         if (c === null) visible = false;
         else left = c - lw / 2;
