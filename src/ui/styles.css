@@ -38,6 +38,8 @@
   --shadow-btn: 0 4px 0 rgba(0, 0, 0, 0.32);
   --shadow-btn-hover: 0 6px 0 rgba(0, 0, 0, 0.32);
   --shadow-btn-active: 0 1px 0 rgba(0, 0, 0, 0.32);
+  /* Kilap tombol utama: sorot di tepi atas, bayangan di tepi bawah bagian dalam. */
+  --btn-gloss: inset 0 2px 0 rgba(255, 255, 255, 0.5), inset 0 -3px 0 rgba(4, 120, 87, 0.3);
 
   /* --- Vektor Ikon Ruang Angkasa (Procedural SVG Vectors - 100% Bebas Emoji) --- */
   --icon-planet: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none'%3E%3Cellipse cx='12' cy='12' rx='10' ry='4.2' stroke='%2338bdf8' stroke-width='1.8' transform='rotate(-22 12 12)'/%3E%3Ccircle cx='12' cy='12' r='6.2' fill='%236366f1' stroke='%2338bdf8' stroke-width='1.6'/%3E%3Ccircle cx='10' cy='9.8' r='1.8' fill='%23bae6fd'/%3E%3Cpath d='M3.8 15C5.2 17.2 8.2 18.5 12 18.5c4.2 0 7.8-1.5 9-3.8' stroke='%2338bdf8' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
@@ -605,7 +607,8 @@ button.launch-button {
   border: 2px solid #a7f3d0;
   border-radius: var(--r-lg);
   cursor: pointer;
-  box-shadow: 0 6px 0 #047857, 0 10px 20px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 6px 0 #047857, 0 10px 20px rgba(16, 185, 129, 0.35), var(--btn-gloss);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .panel-right button.launch-button { margin-top: 0; }
@@ -621,18 +624,19 @@ button.launch-button:not(:disabled)::before {
 }
 button.launch-button:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 9px 0 #047857, 0 14px 26px rgba(16, 185, 129, 0.45);
+  box-shadow: 0 9px 0 #047857, 0 14px 26px rgba(16, 185, 129, 0.45), var(--btn-gloss);
   filter: brightness(1.08);
 }
 button.launch-button:active:not(:disabled) {
   transform: translateY(3px);
-  box-shadow: 0 2px 0 #047857;
+  box-shadow: 0 2px 0 #047857, var(--btn-gloss);
 }
 button.launch-button:disabled {
   background: linear-gradient(135deg, #334155, #1e293b);
   border-color: #475569;
   color: #94a3b8;
   box-shadow: 0 4px 0 #0f172a;
+  text-shadow: none;
   cursor: not-allowed;
   transform: none;
 }
@@ -670,6 +674,7 @@ button.launch-button:disabled::before {
   padding: 18px 24px;
   pointer-events: auto;
 }
+.dialog:has(.dialog-name) { padding-top: 28px; }
 .dialog-name {
   color: #38bdf8;
   font-weight: 800;
@@ -1333,10 +1338,12 @@ button.launch-button:disabled::before {
   box-shadow: var(--shadow-panel);
   padding: 18px 24px;
 }
+/* Sejajar label nama: menempel di tepi atas kartu agar tidak menabrak teks. */
 .story-dialog .story-skip {
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 0;
+  right: var(--sp-6);
+  translate: 0 -50%; /* bukan transform: hover/active button.choice memakai transform */
   width: auto;
   padding: 4px 12px;
   font-size: var(--fs-xs);
@@ -1393,11 +1400,12 @@ button.dialog-next {
   border: 2px solid #a7f3d0;
   border-radius: var(--r-lg);
   cursor: pointer;
-  box-shadow: 0 5px 0 #047857, 0 8px 16px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 5px 0 #047857, 0 8px 16px rgba(16, 185, 129, 0.35), var(--btn-gloss);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-button.dialog-next:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #047857, 0 12px 22px rgba(16, 185, 129, 0.45); filter: brightness(1.08); }
-button.dialog-next:active { transform: translateY(3px); box-shadow: 0 2px 0 #047857; }
+button.dialog-next:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #047857, 0 12px 22px rgba(16, 185, 129, 0.45), var(--btn-gloss); filter: brightness(1.08); }
+button.dialog-next:active { transform: translateY(3px); box-shadow: 0 2px 0 #047857, var(--btn-gloss); }
 
 .nova-bubble {
   position: absolute;
@@ -1646,19 +1654,26 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 /* --- Review Misi & Perolehan Bintang --- */
 .review-grid {
   position: absolute;
-  inset: 60px 18px 64px;
+  inset: 74px 18px 64px;
   display: grid;
   grid-template-columns: 1fr 360px;
   gap: 16px;
   pointer-events: none;
 }
+.review-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  animation: ui-enter 220ms ease-out both;
+}
+.review-col > .review-card { flex: 1; min-height: 0; }
 .review-card {
   background: var(--surface-panel);
   border: var(--border-panel);
   border-radius: var(--r-xl);
   box-shadow: var(--shadow-panel);
-  animation: ui-enter 220ms ease-out both;
-  padding: 22px 26px;
+  padding: 30px 26px 22px;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #818cf8 transparent;
@@ -1875,7 +1890,36 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 }
 
 .whatif { margin-top: 16px; }
-.whatif-item { padding: 8px 0; border-top: 1px solid rgba(56, 189, 248, 0.2); }
+.whatif { counter-reset: whatif; }
+.whatif-item {
+  counter-increment: whatif;
+  position: relative;
+  margin: var(--sp-2) 0 0 var(--sp-3);
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) 24px;
+  background: rgba(56, 189, 248, 0.07);
+  border: 2px solid rgba(56, 189, 248, 0.22);
+  border-radius: var(--r-md);
+}
+/* Badge nomor setengah keluar di tepi kiri kartu. */
+.whatif-item::before {
+  content: counter(whatif);
+  position: absolute;
+  left: -13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: #422006;
+  background: linear-gradient(180deg, #fde047, #f59e0b);
+  border: 2px solid #fef3c7;
+  border-radius: 50%;
+  box-shadow: 0 3px 0 #92400e;
+}
 .whatif-title { color: #38bdf8; font-weight: 700; }
 
 .cine { position: absolute; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
@@ -2153,6 +2197,8 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
   .panel { width: 270px; padding: 10px 12px; }
   .review-grid {
     grid-template-columns: 1fr;
+    padding-top: var(--sp-4);
+    row-gap: 28px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #818cf8 transparent;
@@ -2171,6 +2217,47 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 .review-empty h2 { margin: 0; }
 .review-empty p { margin: 0; font-size: var(--fs-lg); line-height: 1.5; color: #cbd5e1; }
 .review-empty button.launch-button { width: auto; min-width: 200px; margin-top: var(--sp-2); }
+
+/* --- Label judul yang menempel di tepi atas panel (setengah keluar bingkai) --- */
+.panel-tab, .dialog .dialog-name {
+  --tab-a: #38bdf8;
+  --tab-b: #6366f1;
+  --tab-lip: #312e81;
+  position: absolute;
+  top: 0;
+  left: var(--sp-6);
+  z-index: 1;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: calc(100% - 2 * var(--sp-6));
+  margin: 0;
+  padding: 5px 14px;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.35);
+  background: linear-gradient(180deg, var(--tab-a), var(--tab-b));
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--r-md);
+  box-shadow: 0 4px 0 var(--tab-lip), 0 8px 16px rgba(0, 0, 0, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+}
+.dialog[data-speaker='sekar'] .dialog-name { --tab-a: #fb923c; --tab-b: #e11d48; --tab-lip: #881337; }
+.dialog[data-speaker='ground'] .dialog-name { --tab-a: #60a5fa; --tab-b: #2563eb; --tab-lip: #1e3a8a; }
+.dialog[data-speaker='beacon'] .dialog-name { --tab-a: #c084fc; --tab-b: #7c3aed; --tab-lip: #4c1d95; }
+.dialog[data-speaker='event'] .dialog-name {
+  --tab-a: #fde047;
+  --tab-b: #f59e0b;
+  --tab-lip: #92400e;
+  color: #422006;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4);
+}
 
 /* Tooltip istilah sains (elemen bersama di body, di luar zoom overlay) */
 .has-tooltip { text-decoration: underline dashed; text-underline-offset: 3px; cursor: help; pointer-events: auto; }

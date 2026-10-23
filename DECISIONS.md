@@ -311,6 +311,10 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
     - j. **Kompas dengan arah mata angin:** Utara = −Z dunia, penanda dijepit ke tepi pita dan ditata dua baris agar tidak bertumpuk.
     - k. **Kotak teks kontrol keyboard di Flight dan Surface dihapus** atas permintaan pemilik proyek; petunjuk tombol kini lewat chip di prompt kontekstual.
     - l. **Alat dev `npm run ui:audit`:** `scripts/ui-audit.mjs` (puppeteer-core + Firefox sistem, hanya devDependency, tidak masuk `dist/`) memeriksa OVERLAP, ESCAPES, dan OFFSCREEN di semua scene pada 1366, 1024, dan 1024 x1.2; exit 1 bila ada temuan. Aturan audit: lapisan >= 80% viewport diabaikan pada OVERLAP, dan OFFSCREEN hanya memeriksa leluhur ber-clip. Ini dipakai sebagai gerbang rilis rombak ini (hasil akhir: bersih, exit 0).
+139. **Gaya panel "fisik" di layar menu (permintaan pemilik proyek, terinspirasi UI game kasual):** hanya untuk dialog dan Review; HUD Flight/Surface tetap gelap transparan agar adegan 3D tetap terlihat.
+    - a. **Label judul di tepi atas panel:** `.dialog-name` di dalam `.dialog` dan `.panel-tab` di Review menempel setengah keluar bingkai. Warnanya per pembicara lewat `data-speaker` (NOVA biru, Sekar merah, Ground Control biru tua, Beacon ungu, event kuning). Di Review, kartu dibungkus `.review-col` supaya label tidak ikut terpotong oleh kartu yang bisa di-scroll. Tombol "Lewati" di dialog cerita ikut pindah ke tepi atas, sejajar dengan label.
+    - b. **Tombol utama lebih tebal:** `launch-button` dan `dialog-next` mendapat kilap `--btn-gloss` (sorot di atas, bayangan dalam di bawah).
+    - c. **Saran "Bagaimana jika" bernomor:** setiap saran menjadi kartu dengan badge angka yang menyembul di tepi kiri (CSS counter, tanpa perubahan TS).
 
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).

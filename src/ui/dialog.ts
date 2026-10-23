@@ -22,6 +22,7 @@ export function showEventDialog(
   runMinigame?: (minigameId: string) => Promise<number>,
 ): EventDialog {
   const card = el('div', 'dialog modal event-dialog');
+  card.dataset.speaker = 'event';
   host.appendChild(card);
 
   const showResult = (outcome: ChoiceOutcome): void => {
@@ -161,6 +162,7 @@ export function showDialogSequence(host: HTMLElement, lines: DialogLine[], onDon
     const line = lines[index];
     portraitBox.replaceChildren(createPortrait(line.speaker));
     portraitBox.dataset.speaking = 'true';
+    card.dataset.speaker = line.speaker;
     name.textContent = SPEAKER_NAMES[line.speaker];
     text.textContent = '';
     typed = 0;

@@ -19,6 +19,13 @@ const SPIN = 0.5;
 const pct = (v: number): string => (Number.isFinite(v) ? (v * 100).toFixed(0) : '∞');
 const fmt = (n: number): string => n.toFixed(1).replace('.', ',');
 
+/** Kolom review: label judul menempel di tepi atas kartu (di luar kartu agar tidak ikut ter-scroll/terpotong). */
+function withTab(card: HTMLElement, label: string): HTMLElement {
+  const col = el('div', 'review-col');
+  col.append(el('div', 'panel-tab', label), card);
+  return col;
+}
+
 /** Layar Mission Review: skor transparan, bintang, penyebab utama, medali, Beacon, dan alur lanjut/perbaiki. */
 export class ReviewScene extends BaseScene {
   readonly id = 'review' as const;
@@ -159,7 +166,7 @@ export class ReviewScene extends BaseScene {
     actions.append(next, fix);
     if (!success && rules.recordsProgress) actions.appendChild(el('p', 'score-explain', REVIEW_UI.continueHint));
     right.appendChild(actions);
-    grid.append(left, right);
+    grid.append(withTab(left, REVIEW_UI.tabReport), withTab(right, rules.recordsProgress ? REVIEW_UI.tabProgress : REVIEW_UI.tabNext));
     ui.appendChild(grid);
 
     if (rules.storyDialogs && record?.newBeacon) {
