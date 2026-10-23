@@ -315,6 +315,11 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
     - a. **Label judul di tepi atas panel:** `.dialog-name` di dalam `.dialog` dan `.panel-tab` di Review menempel setengah keluar bingkai. Warnanya per pembicara lewat `data-speaker` (NOVA biru, Sekar merah, Ground Control biru tua, Beacon ungu, event kuning). Di Review, kartu dibungkus `.review-col` supaya label tidak ikut terpotong oleh kartu yang bisa di-scroll. Tombol "Lewati" di dialog cerita ikut pindah ke tepi atas, sejajar dengan label.
     - b. **Tombol utama lebih tebal:** `launch-button` dan `dialog-next` mendapat kilap `--btn-gloss` (sorot di atas, bayangan dalam di bawah).
     - c. **Saran "Bagaimana jika" bernomor:** setiap saran menjadi kartu dengan badge angka yang menyembul di tepi kiri (CSS counter, tanpa perubahan TS).
+140. **Asap dan cahaya peluncuran (permintaan pemilik proyek):** `src/gen/smoke.ts` (`SmokeCloud`), dipakai di `src/scenes/flight.ts`.
+    - a. **Awan landasan:** selama mesin menyala dan roket masih rendah (termasuk saat throttle belum cukup untuk lepas landas), asap putih-abu bergulung dari parit api. Sekitar 70% gumpalan keluar ke dua sisi (sumbu x, termasuk melewati menara) dan sisanya melingkar. Awan berhenti terbentuk setelah nozzle naik 1,6 kali tinggi roket.
+    - b. **Tiang asap:** jejak asap tertinggal di udara bawah dan menipis seiring kemajuan langit 0,22–0,6. Jejak mulai sedikit di belakang nozzle supaya inti api tetap terlihat.
+    - c. **Lampu mesin:** satu `PointLight` jingga di bawah nozzle menerangi landasan, menara, dan badan roket sesuai throttle. Lampu ini selalu ada dengan intensitas 0 saat mati, supaya jumlah lampu tetap dan shader tidak dikompilasi ulang di tengah permainan.
+    - d. **Teknis:** kedua awan adalah `THREE.Points` dengan shader sendiri (blending normal, ukuran per gumpalan dalam satuan dunia, tekstur gumpalan prosedural dari RNG berseed, sisi bawah disinari api). Keduanya menjadi anak grup `world`, jadi asap diam di tempat saat dunia turun. Asap digambar sebelum api aditif. Tambahannya 2 draw call. Detail rendah memakai setengah kolam partikel dan setengah laju emisi.
 
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
