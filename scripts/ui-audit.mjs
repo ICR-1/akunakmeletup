@@ -4,7 +4,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import puppeteer from 'puppeteer-core';
 
 const OUT = 'ui-audit';
-const URL = process.env.AUDIT_URL ?? 'http://localhost:5173/';
+const PAGE_URL = process.env.AUDIT_URL ?? 'http://localhost:5173/';
 const FIREFOX = process.env.FIREFOX_BIN ?? '/usr/bin/firefox';
 const SIZES = [[1366, 768], [1024, 700]];
 const SCENES = ['briefing', 'design', 'flight', 'surface', 'review'];
@@ -85,19 +85,31 @@ const report = {};
 try {
   const page = await browser.newPage();
   page.on('console', (m) => { if (['error', 'warn'].includes(m.type())) logs.push(`${m.type()}: ${m.text()}`); });
-  page.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
+  let currentKey = 'load';
+  page.on('pageerror', (e) => {
+    logs.push(`pageerror: ${e.message}`);
+    (report[currentKey] ??= []).push(`PAGEERROR ${e.message}`);
+  });
   const rounds = [...SIZES.map(([w, h]) => [w, h, 1]), [1024, 700, 1.2]];
   for (const [w, h, scale] of rounds) {
     const suffix = scale === 1 ? '' : `-x${scale}`;
     await page.setViewport({ width: w, height: h });
-    await page.goto(URL, { waitUntil: 'load' });
+    await page.goto(PAGE_URL, { waitUntil: 'load' });
     await sleep(LOAD_WAIT_MS);
     if (scale !== 1) await page.evaluate((s) => document.documentElement.style.setProperty('--ui-scale', String(s)), scale);
     for (const s of SCENES) {
-      await page.evaluate((id) => window.__astra.scenes.switchTo(id), s).catch((e) => logs.push(`switch ${s}: ${e.message}`));
+      const key = `${s}-${w}${suffix}`;
+      currentKey = key;
+      report[key] ??= [];
+      try {
+        await page.evaluate((id) => window.__astra.scenes.switchTo(id), s);
+      } catch (e) {
+        report[key].push(`SWITCH_FAILED ${e.message}`);
+        continue;
+      }
       await sleep(SCENE_WAIT_MS);
-      await page.screenshot({ path: `${OUT}/${s}-${w}${suffix}.png` });
-      report[`${s}-${w}${suffix}`] = await page.evaluate(collectIssues);
+      await page.screenshot({ path: `${OUT}/${key}.png` });
+      report[key].push(...(await page.evaluate(collectIssues)));
     }
   }
 } finally {
@@ -107,7 +119,7 @@ writeFileSync(`${OUT}/report.json`, JSON.stringify(report, null, 1));
 let failed = false;
 for (const [key, list] of Object.entries(report)) {
   if (list.length) console.log(`${key}: ${list.length}`);
-  for (const l of list) if (/^(OVERLAP|ESCAPES|OFFSCREEN)/.test(l)) { failed = true; console.log(`  ${l}`); }
+  for (const l of list) if (/^(OVERLAP|ESCAPES|OFFSCREEN|SWITCH_FAILED|PAGEERROR)/.test(l)) { failed = true; console.log(`  ${l}`); }
 }
 if (logs.length) console.log('LOGS\n' + [...new Set(logs)].slice(0, 30).join('\n'));
 console.log(failed ? 'AUDIT: ada temuan' : 'AUDIT: bersih');
