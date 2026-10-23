@@ -158,7 +158,7 @@ export class DesignPanel {
     const dest = choiceGroup(DESIGN.destination, cat.destinations.filter((d) => d.mvp).map((d) => {
       const locked = !this.options.unlocked.includes(d.id);
       return {
-        id: d.id, label: locked ? `🔒 ${d.name}` : d.name, disabled: locked,
+        id: d.id, label: d.name, disabled: locked,
         sub: locked ? STORY_UI.locked : `g ${d.gravity} m/s² · budget ${d.budgetMusd} MUSD · Δv ${d.deltaVKmS} km/s`,
       };
     }), (id) => this.handlers.change((c) => setDestination(c, id)), 'destination');
@@ -175,6 +175,7 @@ export class DesignPanel {
 
     const btnStd = el('button', 'preset-btn');
     btnStd.type = 'button';
+    btnStd.dataset.preset = 'standard';
     btnStd.append(
       el('span', 'preset-btn-name', STUDENT_UI.presetStandard),
       el('span', 'preset-btn-desc', STUDENT_PRESETS[destId()]?.standard.desc ?? ''),
@@ -185,6 +186,7 @@ export class DesignPanel {
 
     const btnCruiser = el('button', 'preset-btn');
     btnCruiser.type = 'button';
+    btnCruiser.dataset.preset = 'cruiser';
     btnCruiser.append(
       el('span', 'preset-btn-name', STUDENT_UI.presetCruiser),
       el('span', 'preset-btn-desc', STUDENT_PRESETS[destId()]?.cruiser.desc ?? ''),

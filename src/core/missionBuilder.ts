@@ -15,7 +15,7 @@ export const STUDENT_PRESETS: Record<Id, Record<PresetKey, StudentPreset>> = {
   moon: {
     standard: {
       key: 'standard',
-      name: '🚀 Standar Disarankan',
+      name: 'Standar Disarankan',
       desc: 'Pandu-1 + Lander S (Efisien, seimbang, dan hemat anggaran)',
       config: {
         destinationId: 'moon', rocketId: 'pandu_1',
@@ -25,7 +25,7 @@ export const STUDENT_PRESETS: Record<Id, Record<PresetKey, StudentPreset>> = {
     },
     cruiser: {
       key: 'cruiser',
-      name: '🚜 Jelajah (+Rover)',
+      name: 'Jelajah (+Rover)',
       desc: 'Pandu-1 + Lunar Cruiser (Eksplorasi permukaan dengan mobil penjelajah)',
       config: {
         destinationId: 'moon', rocketId: 'pandu_1',
@@ -37,7 +37,7 @@ export const STUDENT_PRESETS: Record<Id, Record<PresetKey, StudentPreset>> = {
   mars: {
     standard: {
       key: 'standard',
-      name: '🚀 Standar Disarankan',
+      name: 'Standar Disarankan',
       desc: 'Rajawali-2 + Lander S (Jangkauan optimal untuk transfer dan pendaratan Mars)',
       config: {
         destinationId: 'mars', rocketId: 'rajawali_2',
@@ -47,7 +47,7 @@ export const STUDENT_PRESETS: Record<Id, Record<PresetKey, StudentPreset>> = {
     },
     cruiser: {
       key: 'cruiser',
-      name: '🚜 Jelajah (+Rover)',
+      name: 'Jelajah (+Rover)',
       desc: 'Garuda Heavy + Lunar Cruiser (Wahana berat penjelajah medan pasir Mars)',
       config: {
         destinationId: 'mars', rocketId: 'garuda_heavy',

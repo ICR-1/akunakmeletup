@@ -136,7 +136,7 @@ export class BriefingScene extends BaseScene {
       const button = el('button', 'choice dest-button');
       button.type = 'button';
       button.disabled = !open;
-      button.appendChild(el('span', 'choice-name', `${open ? '' : '🔒 '}${dest.name}  ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`));
+      button.appendChild(el('span', 'choice-name', `${dest.name}  ${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}`));
       button.appendChild(el('span', 'choice-sub', open
         ? `g ${dest.gravity} m/s² · budget ${dest.budgetMusd} MUSD${best !== undefined ? ` · ${STORY_UI.best} ${best}` : ''}`
         : STORY_UI.locked));

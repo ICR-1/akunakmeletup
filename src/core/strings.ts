@@ -81,17 +81,17 @@ export const DESIGN = {
 };
 
 export const STUDENT_UI = {
-  presetsTitle: '💡 Rekomendasi Rakitan Cepat Siswa',
+  presetsTitle: 'Rekomendasi Rakitan Cepat Siswa',
   presetsSubtitle: 'Pilih paket rakitan siap luncur agar tidak pusing merakit dari nol:',
-  presetStandard: '🚀 Standar Disarankan',
-  presetCruiser: '🚜 Jelajah (+Rover)',
-  reset: '🔄 Reset Desain',
-  recommendedBadge: '⭐ Disarankan',
+  presetStandard: 'Standar Disarankan',
+  presetCruiser: 'Jelajah (+Rover)',
+  reset: 'Reset Desain',
+  recommendedBadge: 'Disarankan',
   categoryCore: 'Komponen Inti (Wajib)',
   categoryOptional: 'Perlengkapan Tambahan (Opsional)',
   categoryScience: 'Sains & Bahan Bakar',
-  autoFixButton: '✨ Terapkan Rekomendasi NOVA (Siap Luncur)',
-  studentTipTitle: '💡 Tips Siswa:',
+  autoFixButton: 'Terapkan Rekomendasi NOVA (Siap Luncur)',
+  studentTipTitle: 'Tips Siswa:',
   studentTipHelp: 'Gunakan preset di atas jika kombinasi terasa terlalu rumit!',
 } as const;
 

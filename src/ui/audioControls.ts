@@ -32,7 +32,7 @@ export function createAudioControls(
   slider.value = String(Math.round(initial.volume * 100));
   slider.title = STORY_UI.sound;
   const refresh = (): void => {
-    mute.textContent = audio.isMuted ? `🔇 ${STORY_UI.mute}` : `🔊 ${STORY_UI.sound}`;
+    mute.textContent = audio.isMuted ? STORY_UI.mute : STORY_UI.sound;
     mute.dataset.muted = String(audio.isMuted);
   };
   mute.addEventListener('click', () => {
@@ -78,10 +78,10 @@ export function createAudioControls(
     refreshDetail();
     onChange({ muted: audio.isMuted, volume: audio.currentVolume, textScale, shadows, detail, music });
   });
-  const musicButton = el('button', 'audio-mute');
+  const musicButton = el('button', 'audio-mute audio-music');
   musicButton.type = 'button';
   const refreshMusic = (): void => {
-    musicButton.textContent = `🎵 ${STORY_UI.music}: ${music ? STORY_UI.on : STORY_UI.off}`;
+    musicButton.textContent = `${STORY_UI.music}: ${music ? STORY_UI.on : STORY_UI.off}`;
   };
   musicButton.addEventListener('click', () => {
     music = !music;

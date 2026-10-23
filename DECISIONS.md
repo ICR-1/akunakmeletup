@@ -203,6 +203,91 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
       2. Indikator zona kecepatan touchdown di HUD dilengkapi tooltip deskriptif: Zona Sempurna (0–2 m/s), Zona Sukses (2–5 m/s), Zona Kerusakan (5–12 m/s), Zona Hancur (> 12 m/s).
     - Tes: 4 pengujian unit baru di `tests/rules/flightSim.test.ts` (respons W 2,0/s, pemotongan S 2,5/s, peredaman overshoot $v_y > 0$, dan jaminan touchdown *perfect* saat menahan Spasi). Seluruh 55 berkas tes (528 tes) lulus 100%.
 
+131. **Perombakan Visual UI: Colorful, Playful & Kids-Friendly Space Architect (permintaan pemilik proyek):**
+(a) **Latar Belakang & Identitas Baru:**
+    - Sebelumnya UI menggunakan gaya terminal militer monokrom/navy gelap dengan font monospace (`ui-monospace`), border 1px tajam, dan palet yang kaku/dingin.
+    - Mengadopsi prinsip desain *Claymorphism & Vibrant Block-Based* yang playful, ramah anak, dan bernuansa edukasi antariksa ceria tanpa menggunakan aset gambar eksternal (100% pure CSS procedural).
+(b) **Rincian Transformasi Komponen UI:**
+    - *Tipografi Ramah & Hangat:* Mengganti font monospace terminal dengan tumpukan font sans-serif bulat dan lembut: `'Quicksand', 'Nunito', 'Comfortaa', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Arial Rounded MT Bold', sans-serif`.
+    - *Palet Warna Ceria (Candy Space):* Memperkenalkan aksen permen antariksa yang cerah: Electric Cyan (`#38bdf8`), Happy Emerald (`#34d399`), Sunny Gold (`#facc15`), Blast Orange (`#fb923c`), Strawberry Coral (`#f87171`), dan Magic Violet (`#c084fc`).
+    - *Bentuk 3D Lembut & Sudut Membulat (Clay / Tactile):* Semua panel kini memiliki sudut membulat lebar (`border-radius: 22px`), border berlapis cahaya 2,5px, dan bayangan kedalaman lembut (`box-shadow: 0 16px 42px ...`).
+    - *Tombol Chunky & Interaksi 3D Pop:* Tombol memiliki ketebalan visual 3D bawah (`box-shadow: 0 4px 0 ...`), efek hover melayang (`translateY(-2px)`), dan sensasi tekan pegas yang memuaskan (`active: translateY(2px)`).
+    - *Tombol Putar Counter (+ / −):* Tombol bertambah/berkurang diubah menjadi gelembung bulat berwarna permen (+ hijau mint, − merah stroberi) dengan angka tebal di dalam kartu mini.
+    - *Tombol Luncurkan Raksasa:* Menggunakan gradien cerah toska-ke-zamrud ceria dengan bayangan bevel 3D dan ikon roket 🚀.
+    - *Status GO / NO-GO:* Berubah menjadi lencana stempel permainan yang ceria dengan batas tebal dan cahaya neon lembut.
+    - *Indikator Margin & Meter Permukaan:* Menggunakan bilah kapsul chubby (`border-radius: 999px`) dengan gradien halus dan ikon emoji (💰, ⚖️, 🚀, ⚡, 📡, 💨, 🔋).
+    - *HUD Penerbangan & Pendaratan:* Pengukur kecepatan segmen permen cerah (Hijau mint, Kuning matahari, Oranye, Merah stroberi), lencana bantalan pendaratan kapsul bercahaya, dan prompt F yang menonjol.
+    - *Review Misi & Bintang:* Bintang emas bercahaya (`★ ★ ★`), medali berbentuk pita permen, dan kartu skor permainan yang memotivasi siswa.
+    - *Layar Memuat (`index.html`):* Disesuaikan dengan font bulat, spinner bercahaya, dan bilah progres kapsul pelangi.
+    - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
+
+132. **Pembersihan Layout UI, Eliminasi Elemen Menumpuk & Penataan Responsif (permintaan pemilik proyek):**
+(a) **Latar Belakang Masalah Overlap:**
+    - Pada layar standar (laptop 1366×768 atau saat window browser diperkecil), beberapa elemen UI saling bertabrakan:
+      1. Teks panduan tombol permukaan (`.surface-controls`) yang panjang (~137 karakter) menggunakan `white-space: nowrap`, sehingga melebar hingga >800px dan menabrak bilah sumber daya (`.meter-panel`) di kiri bawah serta kontrol audio (`.audio-controls`) di kanan bawah.
+      2. Indikator diagnostik `#perf` berada di `bottom: 6px; left: 50%`, langsung menimpa teks kontrol bawah.
+      3. Di Scene Penerbangan, gelembung NOVA (`.nova-bubble`) diletakkan di `bottom: 18px; left: 18px`, menabrak HUD navigasi & pendaratan tengah bawah (`.hud-bottom`).
+      4. Notifikasi toast permukaan (`.toasts`) di `top: 136px` menabrak bagian atas panel jurnal (`.journal-panel`) yang terbuka di `top: 150px`.
+      5. Dialog event krisis dan overlay minigame di `.modal-host` tidak memiliki peredupan latar belakang, membuat teks dan grafik di belakangnya tembus pandang dan menimbulkan polusi visual.
+      6. Tombol luncurkan di Scene Desain tenggelam ke bawah lipatan layar pada resolusi vertikal pendek.
+      7. Pada Scene Review, tombol aksi *Perbaiki Desain* tertindih oleh kontrol audio di kanan bawah.
+(b) **Solusi & Penataan Presisi:**
+    - *Surface Controls Anti-Tabrakan:* Menghapus `white-space: nowrap`, menambahkan `max-width: min(600px, calc(100vw - 520px))`, pembungkusan teks rapi, dan menaikkan posisinya ke `bottom: 74px` pada layar sempit.
+    - *Isolasi Gelembung NOVA Penerbangan:* Memindahkan `.scene-ui-flight .nova-bubble` ke `top: 290px; left: 18px; width: 290px`, bersarang tepat di bawah panel tahapan roket (`.hud-left`) dan sepenuhnya bersih dari `.hud-bottom`.
+    - *Diagnostik `#perf`:* Dipindahkan ke `top: 8px; left: 50%`, menjamin nol tabrakan dengan seluruh elemen kontrol bawah.
+    - *Toasts & Jurnal Permukaan:* Memindahkan `.toasts` ke `top: 16px; left: 50%` (kapsul atas pulau notifikasi), dan menaikkan z-index jurnal ke 50 di `top: 140px`, sehingga toast tidak pernah menutupi jurnal lagi.
+    - *Backdrop Dimming Modal Host:* Memberikan `.modal-host:has(> *:not([hidden]))` latar belakang gelap transparan (`rgba(3, 7, 18, 0.72)`) dan `backdrop-filter: blur(5px)`, sehingga dialog dan minigame tampak fokus, bersih, dan kontras tinggi.
+    - *Tombol Luncurkan Sticky:* Memberikan `.panel-right button.launch-button` status `position: sticky; bottom: 0; z-index: 5` agar pemain selalu dapat melihat tombol Luncurkan tanpa perlu scroll.
+    - *Review Grid Buffer:* Mengubah `inset: 60px 18px 64px` agar kartu review berhenti 50px di atas kontrol audio.
+    - *Aturan Responsif:* Menambahkan breakpoint CSS `@media` untuk layar `< 1200px`, `< 1024px`, dan `< 860px` (penyesuaian lebar panel dan penumpukan vertikal kolom review).
+    - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
+
+133. **Eliminasi Teks & Logo Meluap Melewati Batas Border (permintaan pemilik proyek):**
+(a) **Latar Belakang Masalah Teks/Logo Meluap:**
+    - Pada beberapa kartu dan tombol, kombinasi logo (emoji/SVG), lencana (badge), dan teks panjang melewati batas border kartu:
+      1. *Indikator Margin (`.indicator`):* Kolom label dibatasi 90px dengan `white-space: nowrap`. Label "📡 Komunikasi" dengan logo emoji memakan lebar ~115px, sehingga teks meluap 25px menembus batas sel dan menabrak border bilah indikator (`.indicator-bar`).
+      2. *Tombol Rekomendasi Siswa (`.autofix-button`):* String bawaan sudah memuat emoji "✨", namun CSS menambahkan `::before { content: '✨'; }`, menghasilkan logo ganda ("✨ ✨"). Ditambah dengan teks panjang 46 karakter tanpa *word wrap*, teks melebar hingga 430px dan menembus border kiri/kanan tombol di dalam panel 310px.
+      3. *Kartu Pilihan & Counter Modul (`.choice-name` & `.rec-badge`):* Item panjang seperti "Spektrometer Inframerah Dekat" ditambah lencana rekomendasi ("⭐ Disarankan") dan logo roket aktif ("🚀") disusun dalam flex satu baris tanpa wrap (`flex-wrap: wrap`), menyebabkan teks dan lencana mencuat >100px ke luar border kartu.
+      4. *Gelembung & Avatar NOVA (`.nova-bubble`):* Elemen SVG potret NOVA memiliki sudut persegi (rect 80×80) tanpa border-radius tersendiri, sehingga sudut gelap persegi mencuat ke luar lengkungan border gelembung (`border-radius: 18px`). Teks pesan NOVA juga tidak memiliki `min-width: 0` dan `word-break: break-word`, merentangkan gelembung melebihi lebar batasnya.
+      5. *Label Scene Atas (`#scene-label`):* Nama scene panjang seperti "3. Penerbangan Luar Angkasa & Pendaratan" meluap atau pecah menjadi 2 baris tidak simetris di dalam kapsul bulat (`border-radius: 999px`).
+      6. *Label Meter Permukaan (`.meter`):* Teks "Baterai suit" dan "Oksigen suit" berpotensi menabrak bilah pengukur jika tidak dipangkas rapi.
+(b) **Solusi & Pengikatan Batas:**
+    - *Grid Fleksibel Indikator:* Mengubah kolom grid menjadi `16px minmax(84px, auto) 1fr 46px; gap: 6px`, font 11px, dan `overflow: hidden`.
+    - *Pembersihan AutoFix Button:* Menghapus `::before` ganda, menetapkan `display: block; white-space: normal; word-break: break-word; font-size: 11.5px`, menjaga konten tetap 100% di dalam batas border tombol.
+    - *Wrap Aman Choice & Counter:* Menambahkan `flex-wrap: wrap; word-break: break-word; overflow-wrap: break-word;` pada `.choice-name` dan `min-width: 0; overflow: hidden;` pada `.counter-info`.
+    - *Avatar NOVA Terbingkai & Teks Aman:* Membungkus SVG potret NOVA di dalam frame avatar membulat (`border-radius: 12px; border: 2px solid rgba(56, 189, 248, 0.5)`), menambahkan `overflow: hidden; min-width: 0; word-break: break-word;` pada `.nova-bubble`.
+    - *Kapsul Label Scene:* Menetapkan `white-space: nowrap; max-width: min(420px, calc(100vw - 220px)); overflow: hidden; text-overflow: ellipsis;` pada `#scene-label`.
+    - *Meter Permukaan:* Menambahkan `min-width: 0; overflow: hidden; text-overflow: ellipsis;` pada `.meter-label`.
+    - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
+
+134. **Transisi Penuh dari Emoji ke Sistem Vektor Prosedural SVG Mandiri (permintaan pemilik proyek):**
+(a) **Latar Belakang & Alasan:**
+    - Emoji sistem memiliki rendering yang berbeda-beda di tiap OS (Windows, macOS, Linux/Android), memiliki bounding box/padding bawaan font yang tidak seragam (sering menyebabkan teks meluap atau terpotong), dan terlihat kurang profesional dibanding ilustrasi vektor kustom.
+    - Sesuai aturan PRD 0 & 16 (tanpa aset eksternal dan offline-ready), seluruh logo dan ikon kini digantikan oleh vektor SVG prosedural mandiri dalam bentuk CSS variables (`data:image/svg+xml,...`) tanpa dependensi jaringan.
+(b) **Koleksi Vektor Kustom Baru:**
+    - *Planet Scene Atas (`--icon-planet`):* Ilustrasi planet berdering orbit Saturnus bercahaya cyan & nila.
+    - *Roket Peluncuran & Pilihan (`--icon-rocket`):* Roket kartun ceria 45° dengan jendela kapsul, sirip merah, dan semburan api dorong.
+    - *Mobil Penjelajah Rover (`--icon-rover`):* Ilustrasi buggy Lunar Cruiser beroda kuning tebal dan antena komunikator.
+    - *Gembok Keamanan (`--icon-lock`):* Gembok membulat dengan lubang kunci putih untuk modul/destinasi yang terkunci.
+    - *Perisai Peringatan (`--icon-warning`):* Segitiga kuning lembut dengan tanda seru cokelat tua untuk peringatan NO-GO dan krisis.
+    - *5 Indikator Margin:* Koin emas (`--icon-budget`), timbangan kesetimbangan (`--icon-mass`), vektor daya dorong (`--icon-deltav`), kilat daya listrik (`--icon-power`), dan parabola transmisi satelit (`--icon-comms`).
+    - *Gamepad Minigame (`--icon-gamepad`):* Pengendali arkade retro dengan D-pad dan tombol permen cerah.
+    - *Balon Percakapan (`--icon-chat`):* Gelembung pesan cyan dengan tiga titik dialog pembicara.
+    - *Bintang & Kilau (`--icon-star`, `--icon-sparkle`, `--icon-diamond`):* Bintang emas bersinar untuk rekomendasi modul dan bintang misi.
+    - *Kontrol Audio:* Pengeras suara (`--icon-sound`), pengeras suara senyap (`--icon-mute`), dan not balok ungu (`--icon-music`).
+    - *Pembaruan String:* Menghapus karakter emoji mentah pada nama preset dan tombol siswa (`STUDENT_UI`), mengalihkan seluruh rendering ikon ke CSS vector.
+    - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
+
+135. **Penggantian Logo Roket dengan Ilustrasi Kanonik dari pp.jpg (permintaan pemilik proyek):**
+(a) **Latar Belakang & Alasan:**
+    - Pemilik proyek meminta mengganti logo roket dengan ilustrasi kanonik yang disediakan pada berkas `pp.jpg` (roket kartun retro bersudut 45°, badan putih dengan bayangan biru lembut, kerucut hidung & sirip merah menyala, jendela kapsul kaca biru laut dengan pantulan cahaya, dan semburan api dorong kuning-oranye disertai gumpalan asap).
+    - Berkas sumber `pp.jpg` memiliki latar belakang kotak-kotak catur (pola transparansi semu). Untuk mematuhi standar grafis dan aturan PRD Bagian 0 & 16 (100% mandiri/offline, tanpa file eksternal yang diunduh saat runtime), gambar diolah dengan algoritma segmentasi BFS dan antialiasing sub-piksel untuk memisahkan pola kotak-kotak secara bersih dan menghasilkan siluet transparan tajam (256×256).
+(b) **Integrasi Sistem:**
+    - *Variabel CSS `--icon-rocket`:* Disematkan langsung sebagai *inline data URI* WebP (15,7 KB, 92 kualitas dengan kanal alfa penuh) pada [`src/ui/styles.css`](file:///home/tamsy/orca/akunakmeletup/src/ui/styles.css), memberikan rendering tajam pada layar HiDPI / retina tanpa latensi jaringan.
+    - *Penerapan Antarmuka:* Logo roket kanonik ini otomatis tampil pada tombol *Luncurkan*, lencana *GO*, pilihan modul aktif, lencana *cushion*, tombol preset standar, dan judul menu briefing.
+    - *Favicon & Layar Memuat (`index.html`):* Ditambahkan favicon 32×32 mandiri dan logo roket mengambang beranimasi halus (`rocket-float`) pada layar pembuka `#loading`.
+    - Tes: Seluruh 55 berkas tes Vitest (528 tes) lulus 100%, ESLint 0 warning/error, dan bundle produksi dist < 1,1 MB.
+
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.
