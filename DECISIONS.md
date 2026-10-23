@@ -298,6 +298,20 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
     - Panel ditutup dengan tombol ×, tombol Escape, atau klik di luar panel. Tombol keyboard yang ditekan saat fokus di panel tidak diteruskan ke kontrol game.
     - Panel kiri Desain dan meter permukaan dinaikkan (`bottom: 76px`) agar tidak tertutup tombol roda gigi; panel kanan Desain kembali ke `bottom: 20px` karena bilah kanan bawah sudah tidak ada.
 
+138. **Rombak UI/UX (permintaan pemilik proyek):**
+    - a. **Token desain dan konsistensi CSS:** warna, radius (`--r-*`), ukuran font (`--fs-*`), dan jarak dipusatkan sebagai token di `src/ui/styles.css`. Tes `tests/ui/designTokens.test.ts` menolak `font-size`/radius berupa px mentah di CSS baru. Aturan global `[hidden] { display: none !important }` menggantikan aturan `X[hidden]` per kelas.
+    - b. **Kerangka panel tanah liat seragam:** semua panel, kartu Review, panel Pengaturan, dan kartu minigame memakai satu kerangka (permukaan, radius, bayangan), scrollbar tipis, serta animasi masuk `ui-enter`. Di bawah `prefers-reduced-motion` animasi (termasuk kedip peringatan HUD) dimatikan; warna tetap menandai status.
+    - c. **Panel kanan Desain:** terdiri atas kepala, area gulir (`.panel-scroll`), dan kaki tetap, sehingga tombol Luncurkan tidak ikut tergulir dan `li.stage-item` tidak keluar panel.
+    - d. **Label mengambang tanpa tumpang tindih:** `src/ui/labelLayout.ts` (`nudgeApart`, `clampToZone`, `assignRows`) menggeser label agar tidak saling menutup dan tidak keluar zona. Bubble NOVA diposisikan ulang dan memakai `--r-lg`.
+    - e. **Tata letak HUD berpita (Flight/Surface):** kompas menjadi pita di atas; panel objektif dan NOVA di Surface turun di bawah baris kedua penanda kompas (`--surface-band-bottom`). Kompas dibagi `--ui-scale` agar tidak melebar pada ukuran teks besar.
+    - f. **Dialog dan Review:** tombol dialog dibuat ringkas; layar Review punya keadaan kosong bila belum ada hasil.
+    - g. **Tooltip istilah sains:** kamus `GLOSSARY` dan tooltip yang ditempatkan oleh `placeTooltip` (tidak keluar viewport) untuk label Delta-v, margin, dan istilah lain di HUD serta panel.
+    - h. **Transisi scene:** pudar keluar lalu masuk dengan `UI.sceneFadeSec = 0.22` (konstanta baru di `src/core/constants.ts`). Tombol dev `1`-`5` berpindah instan; dengan `prefers-reduced-motion` perpindahan juga instan (preferensi dibaca sekali saat startup). Keputusan: request ke scene yang sama saat fase pudar-keluar tidak melakukan apa-apa; request lain saat pudar-masuk tetap diproses.
+    - i. **Chip tombol keyboard:** petunjuk bertanda `[X]` dirender sebagai chip (`parseKeyHints`/`renderKeyHints`), diterapkan di `createPanel` minigame (`src/minigames/base.ts`) tempat petunjuk dirender, juga di prompt Flight/Surface.
+    - j. **Kompas dengan arah mata angin:** Utara = −Z dunia, penanda dijepit ke tepi pita dan ditata dua baris agar tidak bertumpuk.
+    - k. **Kotak teks kontrol keyboard di Flight dan Surface dihapus** atas permintaan pemilik proyek; petunjuk tombol kini lewat chip di prompt kontekstual.
+    - l. **Alat dev `npm run ui:audit`:** `scripts/ui-audit.mjs` (puppeteer-core + Firefox sistem, hanya devDependency, tidak masuk `dist/`) memeriksa OVERLAP, ESCAPES, dan OFFSCREEN di semua scene pada 1366, 1024, dan 1024 x1.2; exit 1 bila ada temuan. Aturan audit: lapisan >= 80% viewport diabaikan pada OVERLAP, dan OFFSCREEN hanya memeriksa leluhur ber-clip. Ini dipakai sebagai gerbang rilis rombak ini (hasil akhir: bersih, exit 0).
+
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.
