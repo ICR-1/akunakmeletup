@@ -5,6 +5,7 @@ import { MINIGAME_UI } from '../core/strings';
 import { clamp } from '../rules/margin';
 import type { Id, MinigameResult } from '../rules/types';
 import { el } from '../ui/dom';
+import { renderKeyHints } from '../ui/keyHints';
 import type { Minigame, MinigameContext } from './types';
 
 export const CANVAS_W = 560;
@@ -34,7 +35,9 @@ function createPanel(container: HTMLElement, title: string, hint: string): Panel
   timer.appendChild(fill);
   const result = el('div', 'minigame-result');
   result.hidden = true;
-  body.append(canvas, timer, status, el('div', 'minigame-hint', hint), result);
+  const hintEl = el('div', 'minigame-hint');
+  renderKeyHints(hintEl, hint);
+  body.append(canvas, timer, status, hintEl, result);
   root.append(el('div', 'minigame-title', title), body);
   container.appendChild(root);
   return {

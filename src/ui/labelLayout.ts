@@ -44,3 +44,22 @@ export function clampToZone(x: number, w: number, minX: number, maxX: number): n
   if (hi < lo) return (minX + maxX) / 2;
   return Math.min(hi, Math.max(lo, x));
 }
+
+/**
+ * Baris (0 atau 1) per penanda kompas, greedy dari kiri. x = tepi kiri (px), w = lebar.
+ * Penanda masuk baris 0 bila tidak beririsan (plus gap) dengan penanda baris 0 sebelumnya.
+ */
+export function assignRows(items: { x: number; w: number }[], gap: number): number[] {
+  const rows = items.map(() => 0);
+  const order = items.map((_, i) => i).sort((a, b) => items[a].x - items[b].x);
+  let rowEnd = -Infinity;
+  for (const i of order) {
+    if (items[i].x >= rowEnd + gap) {
+      rows[i] = 0;
+      rowEnd = items[i].x + items[i].w;
+    } else {
+      rows[i] = 1;
+    }
+  }
+  return rows;
+}

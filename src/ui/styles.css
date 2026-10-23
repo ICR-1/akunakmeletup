@@ -1008,7 +1008,10 @@ button.launch-button:disabled::before {
   border-top: 9px solid #38bdf8;
   filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.8));
 }
-.compass-marks { position: relative; height: 26px; margin-top: 4px; }
+.compass-marks { position: relative; height: 26px; margin-top: 2px; }
+/* Penanda yang berdekatan turun ke baris kedua agar tidak saling tumpuk. */
+.compass-mark.row2 { top: 22px; }
+.compass-mark.row2::before { display: none; }
 .compass-mark {
   position: absolute;
   top: 0;
@@ -2192,4 +2195,24 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
   pointer-events: none;
   z-index: 900;
   opacity: 0;
+}
+
+/* Chip tombol keyboard (claymorphism): tebal dengan bayangan bawah padat. */
+kbd.key {
+  display: inline-block;
+  min-width: 1.6em;
+  padding: 1px 7px;
+  margin: 0 2px;
+  border-radius: var(--r-sm);
+  border: 2px solid #94a3b8;
+  border-bottom: 3px solid #64748b;
+  background: #f1f5f9;
+  color: #1e293b;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25);
 }

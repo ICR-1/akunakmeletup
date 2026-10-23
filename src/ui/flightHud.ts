@@ -5,6 +5,7 @@ import type { FlightSim } from '../rules/flightSim';
 import type { FlightSummary } from '../rules/missionResult';
 import type { Rocket } from '../rules/types';
 import { clear, el } from './dom';
+import { renderKeyHints } from './keyHints';
 import { attachTooltip } from './tooltip';
 import type { GlossaryKey } from './tooltip';
 
@@ -18,7 +19,7 @@ export class FlightHud {
   private readonly stageRows: StageRow[] = [];
   private readonly message = el('div', 'hud-message');
   private readonly phase = el('div', 'hud-phase');
-  private readonly prompt = el('div', 'hud-prompt', FLIGHT_UI.prompt);
+  private readonly prompt = el('div', 'hud-prompt');
   private readonly values: Record<string, HTMLElement> = {};
   private readonly throttleFill = el('div', 'bar-fill');
   private readonly pitchGauge = el('div', 'gauge gauge-pitch');
@@ -109,6 +110,7 @@ export class FlightHud {
     const z4 = el('div', 'speed-zone z4');
     z4.title = 'Zona Hancur: > 12 m/s';
     this.speedGauge.append(z1, z2, z3, z4, this.speedPointer);
+    renderKeyHints(this.prompt, FLIGHT_UI.prompt);
     this.prompt.hidden = true;
     this.cushionBadge.hidden = true;
     bottom.append(this.prompt, this.pitchGauge, this.reticle, this.cushionBadge, this.speedGauge);
@@ -134,7 +136,7 @@ export class FlightHud {
     this.phase.textContent = FLIGHT_UI.phases[sim.phase];
     // Saat dialog event terbuka simulasi dibekukan: sembunyikan prompt F agar tidak menyesatkan.
     const msg = suspended ? FLIGHT_UI.messages.eventPending : this.messageFor(sim);
-    this.message.textContent = msg;
+    renderKeyHints(this.message, msg);
     this.message.classList.toggle('alert', (sim.jettisonPrompt || sim.falling) && !suspended);
     this.prompt.hidden = !sim.jettisonPrompt || suspended;
 

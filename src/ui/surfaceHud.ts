@@ -4,9 +4,13 @@ import type { GameEvent } from '../rules/types';
 import { showEventDialog } from './dialog';
 import { Cinematic } from './cinematic';
 import { clear, el } from './dom';
+import { renderKeyHints } from './keyHints';
+import { assignRows } from './labelLayout';
 import { attachTooltip } from './tooltip';
 
 const COMPASS_HALF_RAD = Math.PI / 2;
+/** Celah minimum antar-penanda kompas dalam satu baris (px). */
+const COMPASS_ROW_GAP_PX = 4;
 /** Garis skala kompas tiap 15°; tiap 45° diberi label mata angin. */
 const COMPASS_STEP_DEG = 15;
 const wrapPi = (a: number): number => Math.atan2(Math.sin(a), Math.cos(a));
@@ -153,7 +157,7 @@ export class SurfaceHud {
 
     this.clock.textContent = `${v.day ? SURFACE_UI.day : SURFACE_UI.night} · ${fmt(v.elapsedSec)} · ${SURFACE_UI.remaining} ${fmt(v.remainingSec)}`;
     this.clock.dataset.day = String(v.day);
-    this.scanner.textContent = `${SURFACE_UI.scanner}: ${v.scannerReady ? 'siap' : SURFACE_UI.scannerCooling}`;
+    renderKeyHints(this.scanner, `${SURFACE_UI.scanner}: ${v.scannerReady ? 'siap' : SURFACE_UI.scannerCooling}`);
 
     const toLeft = (bearing: number): number => 50 + (bearing / COMPASS_HALF_RAD) * 50;
     for (const t of this.scaleTicks) {
@@ -163,6 +167,7 @@ export class SurfaceHud {
       if (visible) t.node.style.left = `${toLeft(b)}%`;
     }
     // Penanda di luar pandangan ditahan di tepi bar dengan panah, sehingga pemain tahu harus berbalik ke mana.
+    const entries: { mark: HTMLElement; side: number; bearing: number }[] = [];
     const place = (mark: HTMLElement, bearing: number, show: boolean, text: string): void => {
       mark.style.display = show ? 'flex' : 'none';
       if (!show) return;
@@ -171,6 +176,7 @@ export class SurfaceHud {
       mark.dataset.side = String(side);
       mark.style.left = `${side === 0 ? toLeft(bearing) : side < 0 ? 0 : 100}%`;
       mark.textContent = side < 0 ? `◂ ${text}` : side > 0 ? `${text} ▸` : text;
+      entries.push({ mark, side, bearing });
     };
     place(this.hubTick, v.hubBearing, true, `${SURFACE_UI.hub} ${v.hubDistanceM.toFixed(0)} m`);
     v.pois.forEach((p, i) => {
@@ -180,6 +186,16 @@ export class SurfaceHud {
       tick.title = p.label;
       place(tick, p.bearing, p.shown, `${p.distanceM.toFixed(0)} m`);
     });
+    // Penanda yang berdekatan ditumpuk ke baris kedua: baca semua lebar dulu, baru tulis.
+    const cw = this.compass.offsetWidth;
+    const widths = entries.map((e) => e.mark.offsetWidth);
+    const boxes = entries.map((e, i) => {
+      const centre = (toLeft(e.bearing) / 100) * cw;
+      const x = e.side < 0 ? 0 : e.side > 0 ? cw - widths[i] : centre - widths[i] / 2;
+      return { x, w: widths[i] };
+    });
+    const rows = assignRows(boxes, COMPASS_ROW_GAP_PX);
+    entries.forEach((e, i) => e.mark.classList.toggle('row2', rows[i] === 1));
   }
 
   /** Isi jurnal misi (kartu fakta, objektif, data terkumpul). */
@@ -202,7 +218,7 @@ export class SurfaceHud {
   }
 
   setPrompt(text: string | null): void {
-    this.prompt.textContent = text ?? '';
+    renderKeyHints(this.prompt, text ?? '');
     this.prompt.hidden = text === null;
   }
 
