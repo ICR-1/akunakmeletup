@@ -439,3 +439,20 @@ export const JOURNAL_UI = {
   noData: 'belum ada data',
   hint: 'Tab: tutup jurnal',
 } as const;
+
+export type GlossaryKey = 'budget' | 'mass' | 'deltaV' | 'power' | 'comms' | 'margin' | 'gravity' | 'handling' | 'signal' | 'dryMass' | 'm0';
+
+/** Penjelasan singkat istilah sains untuk tooltip (bahasa siswa SMP). */
+export const GLOSSARY: Record<GlossaryKey, { term: string; text: string }> = {
+  budget: { term: 'Budget', text: 'Dana yang boleh dipakai untuk misi, dalam juta dolar (MUSD). Jangan sampai terlampaui.' },
+  mass: { term: 'Massa', text: 'Berat total wahana dalam kilogram. Makin berat, makin banyak bahan bakar yang dibutuhkan.' },
+  deltaV: { term: 'Delta-v (Δv)', text: 'Total perubahan kecepatan yang bisa dihasilkan roket. Makin jauh tujuannya, makin besar Δv yang dibutuhkan.' },
+  power: { term: 'Daya', text: 'Listrik dari panel surya dan baterai untuk menyalakan instrumen, termasuk saat malam.' },
+  comms: { term: 'Komunikasi', text: 'Kemampuan antena mengirim data ke Bumi. Makin jauh jaraknya, makin kuat antena yang dibutuhkan.' },
+  margin: { term: 'Margin', text: 'Selisih antara yang kamu punya dan yang dibutuhkan. Margin positif berarti ada cadangan aman.' },
+  gravity: { term: 'Gravitasi', text: 'Tarikan benda langit pada wahana, dalam m/s². Makin besar, makin sulit mendarat dan lepas landas.' },
+  handling: { term: 'Kemudi', text: 'Seberapa lincah wahana merespons kendali. Wahana yang berat terasa lebih lamban.' },
+  signal: { term: 'Sinyal', text: 'Kekuatan koneksi ke Bumi. Makin kuat sinyal, makin banyak data sains yang berhasil terkirim.' },
+  dryMass: { term: 'Massa kering', text: 'Massa wahana tanpa bahan bakar. Ini bobot yang tersisa setelah semua bahan bakar habis.' },
+  m0: { term: 'Massa awal', text: 'Massa wahana penuh bahan bakar saat peluncuran. Nilai ini menentukan Δv lewat rumus Tsiolkovsky.' },
+};

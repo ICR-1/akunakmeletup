@@ -1,6 +1,7 @@
 import { INDICATOR_LABELS, STATUS_SYMBOL, STATUS_TEXT } from '../core/strings';
 import type { Indicator, IndicatorKey } from '../rules/preflight';
 import { el } from './dom';
+import { attachTooltip } from './tooltip';
 
 const KEYS: IndicatorKey[] = ['budget', 'mass', 'deltaV', 'power', 'comms'];
 const BAR_MIN = 0.04;
@@ -29,6 +30,7 @@ export class IndicatorView {
       const row = el('div', 'indicator');
       const icon = el('span', 'indicator-icon');
       const label = el('span', 'indicator-label', INDICATOR_LABELS[key]);
+      attachTooltip(label, key);
       const bar = el('div', 'indicator-bar');
       const fill = el('div', 'indicator-fill');
       bar.appendChild(fill);

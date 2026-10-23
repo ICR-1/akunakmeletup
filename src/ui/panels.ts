@@ -8,6 +8,8 @@ import { DESIGN, STORY_UI, STUDENT_UI } from '../core/strings';
 import type { PreflightResult } from '../rules/preflight';
 import type { Catalog, Id, MissionConfig, Module } from '../rules/types';
 import { clear, el } from './dom';
+import { attachTooltip } from './tooltip';
+import type { GlossaryKey } from './tooltip';
 import { STAGE_ACCENTS } from '../gen/rocket';
 import { IndicatorView } from './hud';
 import { summarizeCounts, summarizeSelection } from './panelSummary';
@@ -325,11 +327,15 @@ export class DesignPanel {
 
     const m = result.metrics;
     clear(this.metrics);
-    const metric = (k: string, v: string) => this.metrics.append(el('span', 'metric-k', k), el('span', 'metric-v', v));
-    metric(DESIGN.metrics.dry, `${m.dryMassKg.toFixed(0)} kg`);
-    metric(DESIGN.metrics.m0, `${m.m0Kg.toFixed(0)} kg`);
-    metric(DESIGN.metrics.dv, `${m.dvAvailableMs.toFixed(0)} / ${m.dvRequiredMs.toFixed(0)} m/s`);
-    metric(DESIGN.metrics.cost, `${m.totalCostMusd.toFixed(0)} MUSD`);
+    const metric = (k: string, v: string, term: GlossaryKey) => {
+      const kEl = el('span', 'metric-k', k);
+      attachTooltip(kEl, term);
+      this.metrics.append(kEl, el('span', 'metric-v', v));
+    };
+    metric(DESIGN.metrics.dry, `${m.dryMassKg.toFixed(0)} kg`, 'dryMass');
+    metric(DESIGN.metrics.m0, `${m.m0Kg.toFixed(0)} kg`, 'm0');
+    metric(DESIGN.metrics.dv, `${m.dvAvailableMs.toFixed(0)} / ${m.dvRequiredMs.toFixed(0)} m/s`, 'deltaV');
+    metric(DESIGN.metrics.cost, `${m.totalCostMusd.toFixed(0)} MUSD`, 'budget');
 
     const dest = this.catalog.destinations.find((d) => d.id === config.destinationId);
     clear(this.objectives);

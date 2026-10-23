@@ -4,6 +4,7 @@ import type { GameEvent } from '../rules/types';
 import { showEventDialog } from './dialog';
 import { Cinematic } from './cinematic';
 import { clear, el } from './dom';
+import { attachTooltip } from './tooltip';
 
 const COMPASS_HALF_RAD = Math.PI / 2;
 /** Garis skala kompas tiap 15°; tiap 45° diberi label mata angin. */
@@ -80,7 +81,7 @@ export class SurfaceHud {
       oxygen: this.makeMeter(SURFACE_UI.meters.oxygen),
       suit: this.makeMeter(SURFACE_UI.meters.suit),
       vehicle: this.makeMeter(SURFACE_UI.meters.vehicle),
-      signal: this.makeMeter(SURFACE_UI.meters.signal),
+      signal: this.makeMeter(SURFACE_UI.meters.signal, 'signal'),
     };
     const meterPanel = el('div', 'hud-panel meter-panel');
     for (const m of Object.values(this.meters)) meterPanel.appendChild(m.row);
@@ -108,14 +109,16 @@ export class SurfaceHud {
     ui.appendChild(this.root);
   }
 
-  private makeMeter(label: string): Meter {
+  private makeMeter(label: string, term?: 'signal'): Meter {
     const row = el('div', 'meter');
     const icon = el('span', 'meter-icon', '●');
     const bar = el('div', 'meter-bar');
     const fill = el('div', 'meter-fill');
     bar.appendChild(fill);
     const value = el('span', 'meter-value', '100%');
-    row.append(icon, el('span', 'meter-label', label), bar, value);
+    const lab = el('span', 'meter-label', label);
+    if (term) attachTooltip(lab, term);
+    row.append(icon, lab, bar, value);
     return { row, fill, value, icon };
   }
 

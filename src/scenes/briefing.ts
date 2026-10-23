@@ -9,6 +9,8 @@ import { Orrery } from '../gen/orrery';
 import { focusForDestination, type OrreryFocus } from '../gen/solarSystemData';
 import { showDialogSequence } from '../ui/dialog';
 import { el } from '../ui/dom';
+import { attachTooltip } from '../ui/tooltip';
+import type { GlossaryKey } from '../ui/tooltip';
 import { nudgeApart, type LabelBox } from '../ui/labelLayout';
 import { BaseScene } from './baseScene';
 
@@ -166,13 +168,13 @@ export class BriefingScene extends BaseScene {
       button.appendChild(name);
       const sub = el('span', 'choice-sub dest-chips');
       if (open) {
-        const chip = (cls: string, text: string, title?: string): void => {
+        const chip = (cls: string, text: string, term?: GlossaryKey): void => {
           const c = el('span', `dest-chip ${cls}`, text);
-          if (title) c.title = title;
+          if (term) attachTooltip(c, term);
           sub.appendChild(c);
         };
-        chip('chip-gravity', `${dest.gravity} m/s²`, STORY_UI.gravity);
-        chip('chip-budget', `${dest.budgetMusd} MUSD`, STORY_UI.budget);
+        chip('chip-gravity', `${dest.gravity} m/s²`, 'gravity');
+        chip('chip-budget', `${dest.budgetMusd} MUSD`, 'budget');
         if (best !== undefined) chip('chip-best', `${STORY_UI.best} ${best}`);
       } else {
         const prev = dests[i - 1];

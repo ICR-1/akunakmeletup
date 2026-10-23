@@ -5,6 +5,8 @@ import type { FlightSim } from '../rules/flightSim';
 import type { FlightSummary } from '../rules/missionResult';
 import type { Rocket } from '../rules/types';
 import { clear, el } from './dom';
+import { attachTooltip } from './tooltip';
+import type { GlossaryKey } from './tooltip';
 
 const RETICLE_HALF_PX = 62;
 const SPEED_BAR_MAX = 20;
@@ -62,10 +64,12 @@ export class FlightHud {
     return panel;
   }
 
-  private line(panel: HTMLElement, key: string, label: string): void {
+  private line(panel: HTMLElement, key: string, label: string, term?: GlossaryKey): void {
     const row = el('div', 'tele-row');
     const value = el('span', 'tele-value', '-');
-    row.append(el('span', 'tele-label', label), value);
+    const lab = el('span', 'tele-label', label);
+    if (term) attachTooltip(lab, term);
+    row.append(lab, value);
     panel.appendChild(row);
     this.values[key] = value;
   }
@@ -84,9 +88,9 @@ export class FlightHud {
     thr.append(el('span', 'tele-label', t.throttle), bar, this.values.throttle);
     panel.appendChild(thr);
     this.line(panel, 'fuel', t.fuel);
-    this.line(panel, 'handling', t.handling);
+    this.line(panel, 'handling', t.handling, 'handling');
     this.line(panel, 'power', t.power);
-    this.line(panel, 'signal', t.signal);
+    this.line(panel, 'signal', t.signal, 'signal');
     this.values.power.textContent = t.powerOk;
     this.values.signal.textContent = t.signalOk;
     return panel;

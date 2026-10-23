@@ -2165,3 +2165,21 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
 .review-empty h2 { margin: 0; }
 .review-empty p { margin: 0; font-size: var(--fs-lg); line-height: 1.5; color: #cbd5e1; }
 .review-empty button.launch-button { width: auto; min-width: 200px; margin-top: var(--sp-2); }
+
+/* Tooltip istilah sains (elemen bersama di body, di luar zoom overlay) */
+.has-tooltip { text-decoration: underline dashed; text-underline-offset: 3px; cursor: help; }
+.tooltip {
+  position: fixed;
+  z-index: 1000;
+  max-width: 260px;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  background: var(--surface-panel);
+  border: var(--border-panel);
+  box-shadow: var(--shadow-panel);
+  color: var(--ui-text);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  pointer-events: none;
+}
+.tooltip strong { display: block; margin-bottom: var(--sp-1); font-size: var(--fs-md); }
