@@ -20,4 +20,11 @@ describe('token desain CSS', () => {
   it('aturan [hidden] global ada', () => {
     expect(css).toMatch(/^\[hidden\]\s*\{\s*display:\s*none\s*!important;?\s*\}/m);
   });
+  it('scrollbar standar diset', () => {
+    expect(css).toMatch(/scrollbar-color:/);
+    expect(css).toMatch(/scrollbar-width:\s*thin/);
+  });
+  it('gerak dikurangi menghormati preferensi', () => {
+    expect(css).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*animation: none/);
+  });
 });
