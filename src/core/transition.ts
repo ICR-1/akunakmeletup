@@ -12,6 +12,7 @@ export class SceneTransition {
   private phase: Phase = 'idle';
   private t = 0;
   private target: SceneId | null = null;
+  private lastSwitched: SceneId | null = null;
 
   constructor(private readonly fadeSec: number) {}
 
@@ -20,6 +21,15 @@ export class SceneTransition {
   }
 
   request(id: SceneId): void {
+    if (this.phase === 'in') {
+      // Permintaan setelah scene berganti: abaikan bila tujuannya scene yang baru saja dimasuki;
+      // selain itu pudar-keluar lagi dari opacity saat ini tanpa lompatan (opacity = 1 - t/fade = t'/fade).
+      if (id === this.lastSwitched) return;
+      this.target = id;
+      this.phase = 'out';
+      this.t = this.fadeSec - this.t;
+      return;
+    }
     this.target = id;
     if (this.phase === 'idle') {
       this.phase = 'out';
@@ -39,6 +49,7 @@ export class SceneTransition {
     if (this.fadeSec <= 0) {
       const id = this.target;
       this.cancel();
+      this.lastSwitched = id;
       return { switchTo: id, opacity: 0 };
     }
     this.t += dt;
@@ -46,6 +57,7 @@ export class SceneTransition {
       if (this.t >= this.fadeSec - EPS) {
         const id = this.target;
         this.target = null;
+        this.lastSwitched = id;
         this.phase = 'in';
         this.t = 0;
         return { switchTo: id, opacity: 1 };

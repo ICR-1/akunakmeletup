@@ -54,4 +54,35 @@ describe('SceneTransition', () => {
     tr.cancel();
     expect(run(tr, 8).every((x) => x.switchTo === null)).toBe(true);
   });
+
+  it('request setelah scene berganti memicu tepat satu perpindahan lagi tanpa lompatan opacity', () => {
+    const tr = new SceneTransition(0.2);
+    tr.request('design');
+    run(tr, 4); // berganti ke design
+    const mid = tr.update(0.05); // fade-in, opacity 0.75
+    expect(mid.opacity).toBeCloseTo(0.75);
+    tr.request('flight');
+    const r = run(tr, 10);
+    expect(r[0].opacity).toBeGreaterThanOrEqual(mid.opacity);
+    expect(r.map((x) => x.switchTo).filter(Boolean)).toEqual(['flight']);
+    expect(r[9].opacity).toBe(0);
+    expect(tr.busy).toBe(false);
+  });
+
+  it('request ke scene yang baru dimasuki saat pudar-masuk diabaikan', () => {
+    const tr = new SceneTransition(0.2);
+    tr.request('design');
+    run(tr, 5);
+    tr.request('design');
+    expect(run(tr, 6).every((x) => x.switchTo === null)).toBe(true);
+    expect(tr.busy).toBe(false);
+  });
+
+  it('dt besar: berganti dengan opacity 1, lalu kembali idle tanpa pergantian kedua', () => {
+    const tr = new SceneTransition(0.2);
+    tr.request('review');
+    expect(tr.update(10)).toEqual({ switchTo: 'review', opacity: 1 });
+    expect(tr.update(10)).toEqual({ switchTo: null, opacity: 0 });
+    expect(tr.busy).toBe(false);
+  });
 });
