@@ -26,6 +26,9 @@
   --r-sm: 8px; --r-md: 12px; --r-lg: 16px; --r-xl: 22px;
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 20px; --sp-6: 24px;
   --hud-edge: 18px; --hud-gap: 12px;
+  /* Pita kompas Surface: atas 98px; bawah terendah = pita 30 + margin 2 + baris 2 di 22 + tinggi penanda 21 = 75px. */
+  --compass-top: 98px;
+  --surface-band-bottom: calc(var(--compass-top) + 75px + var(--hud-gap) / 2);
   --radius-panel: var(--r-xl);
   --radius-card: var(--r-md);
   --radius-pill: 999px;
@@ -946,7 +949,7 @@ button.launch-button:disabled::before {
 
 .compass {
   position: absolute;
-  top: 98px;
+  top: var(--compass-top);
   left: 50%;
   transform: translateX(-50%);
   width: min(520px, calc(100vw / var(--ui-scale, 1) - 2 * var(--hud-edge)));
@@ -1099,12 +1102,12 @@ button.launch-button:disabled::before {
   color: #bae6fd;
 }
 
-/* Surface: kompas (98-156px) punya pita sendiri; panel samping dan NOVA mulai di 168px. */
+/* Surface: kompas (atas --compass-top) punya pita sendiri, termasuk baris kedua penanda; panel samping dan NOVA mulai 6px di bawah penanda terendah (--surface-band-bottom, 179px). */
 .objective-panel {
-  top: 168px;
+  top: var(--surface-band-bottom);
   right: 18px;
   width: 310px;
-  max-height: calc(100vh / var(--ui-scale, 1) - 168px - 96px);
+  max-height: calc(100vh / var(--ui-scale, 1) - var(--surface-band-bottom) - 96px);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #818cf8 transparent;
@@ -1398,7 +1401,7 @@ button.dialog-next:active { transform: translateY(3px); box-shadow: 0 2px 0 #047
 
 .nova-bubble {
   position: absolute;
-  top: 168px; /* di bawah pita kompas Surface (98px + 58px + gap) */
+  top: var(--surface-band-bottom); /* di bawah baris kedua penanda kompas Surface */
   left: var(--hud-edge);
   width: 330px;
   display: grid;
