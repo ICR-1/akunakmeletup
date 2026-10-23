@@ -1767,7 +1767,7 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
   flex-shrink: 0;
 }
 
-.stage-item { display: flex; align-items: center; gap: 8px; list-style: none; margin-left: -18px; }
+.stage-item { display: flex; align-items: center; gap: 8px; list-style: none; min-width: 0; }
 .stage-dot { width: 10px; height: 10px; display: inline-block; border-radius: 50%; border: 1.5px solid rgba(255, 255, 255, 0.5); }
 .stage-label {
   position: absolute;
