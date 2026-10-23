@@ -25,32 +25,22 @@ function collectIssues() {
     const r = e.getBoundingClientRect();
     return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 0 && r.height > 0 && !e.closest('[hidden]');
   };
-  // Kotak yang tampak: irisan viewport dan semua leluhur ber-overflow. Sumbu yang bisa digulir dilewati.
-  const visibleBox = (e) => {
-    const lim = { left: 0, top: 0, right: vw, bottom: vh, scrollX: false, scrollY: false };
-    for (let p = e.parentElement; p && p !== document.body; p = p.parentElement) {
+  // Isi yang terpotong leluhur ber-overflow (panel gulir, strip kompas) memang disengaja: dilewati.
+  // Hanya leluhur pemotong itu sendiri yang diperiksa terhadap viewport.
+  const hasClipAncestor = (e) => {
+    for (let p = e.parentElement; p && p !== document.body && p.id !== 'overlay'; p = p.parentElement) {
       const cs = getComputedStyle(p);
-      const ox = cs.overflowX;
-      const oy = cs.overflowY;
-      if (ox === 'visible' && oy === 'visible') continue;
-      const b = p.getBoundingClientRect();
-      lim.left = Math.max(lim.left, b.left);
-      lim.top = Math.max(lim.top, b.top);
-      lim.right = Math.min(lim.right, b.right);
-      lim.bottom = Math.min(lim.bottom, b.bottom);
-      if (ox === 'auto' || ox === 'scroll') lim.scrollX = true;
-      if (oy === 'auto' || oy === 'scroll') lim.scrollY = true;
+      if (cs.overflowX !== 'visible' || cs.overflowY !== 'visible') return true;
     }
-    return lim;
+    return false;
   };
+  // Lapisan layar penuh (>= 80% viewport) bukan peserta OVERLAP.
+  const fullScreen = (r) => r.width * r.height >= 0.8 * vw * vh;
   const all = [...document.querySelectorAll('#overlay *')].filter(vis);
   for (const e of all) {
     const r = e.getBoundingClientRect();
     const cs = getComputedStyle(e);
-    const lim = visibleBox(e);
-    const out =
-      (!lim.scrollX && (r.left < lim.left - 1 || r.right > lim.right + 1)) ||
-      (!lim.scrollY && (r.top < lim.top - 1 || r.bottom > lim.bottom + 1));
+    const out = !hasClipAncestor(e) && (r.left < -1 || r.top < -1 || r.right > vw + 1 || r.bottom > vh + 1);
     if (out) {
       issues.push(`OFFSCREEN ${name(e)} [${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)}x${Math.round(r.height)}]`);
     }
@@ -69,7 +59,9 @@ function collectIssues() {
   // Tumpang tindih antar-kotak absolute/fixed (termasuk pointer-events:none).
   const boxes = all.filter((e) => {
     const cs = getComputedStyle(e);
-    return (cs.position === 'absolute' || cs.position === 'fixed') && e.getBoundingClientRect().width > 40 && !e.closest('.label-layer');
+    if (cs.position !== 'absolute' && cs.position !== 'fixed') return false;
+    const r = e.getBoundingClientRect();
+    return r.width > 40 && !fullScreen(r) && !e.closest('.label-layer');
   });
   for (let i = 0; i < boxes.length; i++) {
     for (let j = i + 1; j < boxes.length; j++) {
