@@ -290,3 +290,53 @@ describe('peristiwa dan prompt', () => {
     expect(first && first.type === 'jettison' && first.stageIndex).toBe(0);
   });
 });
+
+describe('kontrol kecepatan pendaratan (landing speed control)', () => {
+  function startLandingSim() {
+    const sim = new FlightSim(createFlightSimConfig(moon, catalog));
+    const p = makePilot(sim, SKILLED);
+    while (sim.phase !== 'landing') sim.step(p(), FIXED_DT);
+    return sim;
+  }
+
+  it('W meningkatkan throttle pendaratan dengan respons cepat (2.0/s)', () => {
+    const sim = startLandingSim();
+    expect(sim.throttle).toBe(0);
+    sim.step({ ...NO_INPUT, throttle: 1 }, 0.25);
+    expect(sim.throttle).toBeCloseTo(0.5, 1);
+  });
+
+  it('S memotong throttle pendaratan dengan cepat (2.5/s)', () => {
+    const sim = startLandingSim();
+    sim.step({ ...NO_INPUT, throttle: 1 }, 0.5);
+    expect(sim.throttle).toBeGreaterThan(0.8);
+    sim.step({ ...NO_INPUT, throttle: -1 }, 0.2);
+    expect(sim.throttle).toBeLessThan(0.6);
+  });
+
+  it('saat wahana naik (vy > 0), melepas W memotong throttle agar tidak meluncur kabur ke angkasa', () => {
+    const sim = startLandingSim();
+    sim.landing!.vy = 5;
+    sim.throttle = 0.8;
+    sim.step(NO_INPUT, 0.2);
+    expect(sim.throttle).toBeLessThan(0.8);
+  });
+
+  it('tahan Spasi (precision cushion) mengatur kecepatan vertikal ke zona aman dan mendarat sempurna', () => {
+    const sim = startLandingSim();
+    expect(sim.phase).toBe('landing');
+    expect(sim.landingCushionActive).toBe(false);
+
+    let guard = 0;
+    while (!sim.ended && guard++ < 60 * 200) {
+      sim.step({ ...NO_INPUT, precision: true }, FIXED_DT);
+      if (!sim.ended) expect(sim.landingCushionActive).toBe(true);
+    }
+    expect(sim.ended).toBe(true);
+    const summary = sim.summary()!;
+    expect(summary.failed).toBe(false);
+    expect(summary.touchdown).toBe('perfect');
+    expect(Math.abs(sim.landing!.vy)).toBeLessThanOrEqual(2.0);
+    expect(Math.abs(sim.landing!.tiltDeg)).toBeLessThanOrEqual(5.0);
+  });
+});

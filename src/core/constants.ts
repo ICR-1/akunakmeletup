@@ -128,6 +128,9 @@ export const FLIGHT = {
     maxTiltDeg: 90,
     boostAccel: 2,
     boostFuelKgPerSec: 1.5,
+    throttleRatePerSec: 2.0,
+    throttleDecayPerSec: 2.5,
+    cushionTargetVy: 1.8,
   },
   touchdown: {
     perfectVy: 2,

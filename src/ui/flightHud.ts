@@ -27,6 +27,8 @@ export class FlightHud {
   private readonly reticleAim = el('div', 'reticle-aim');
   private readonly speedGauge = el('div', 'gauge gauge-speed');
   private readonly speedPointer = el('div', 'speed-pointer');
+  private readonly cushionBadge = el('div', 'cushion-badge', 'BANTUAN PENDARATAN AKTIF (< 2 m/s)');
+  private readonly controlsEl = el('div', 'hud-controls', FLIGHT_UI.controls);
   private readonly result = el('div', 'result-panel');
   private lastFuelStart = 0;
 
@@ -95,9 +97,18 @@ export class FlightHud {
     const bottom = el('div', 'hud-bottom');
     this.pitchGauge.append(el('span', 'gauge-label', FLIGHT_UI.telemetry.pitch), this.pitchGuide, this.pitchNow);
     this.reticle.append(el('div', 'reticle-h'), el('div', 'reticle-v'), this.reticleMarker, this.reticleAim);
-    this.speedGauge.append(el('div', 'speed-zone z1'), el('div', 'speed-zone z2'), el('div', 'speed-zone z3'), el('div', 'speed-zone z4'), this.speedPointer);
+    const z1 = el('div', 'speed-zone z1');
+    z1.title = 'Zona Sempurna: 0 - 2 m/s';
+    const z2 = el('div', 'speed-zone z2');
+    z2.title = 'Zona Sukses: 2 - 5 m/s';
+    const z3 = el('div', 'speed-zone z3');
+    z3.title = 'Zona Kerusakan: 5 - 12 m/s';
+    const z4 = el('div', 'speed-zone z4');
+    z4.title = 'Zona Hancur: > 12 m/s';
+    this.speedGauge.append(z1, z2, z3, z4, this.speedPointer);
     this.prompt.hidden = true;
-    bottom.append(this.prompt, this.pitchGauge, this.reticle, this.speedGauge, el('div', 'hud-controls', FLIGHT_UI.controls));
+    this.cushionBadge.hidden = true;
+    bottom.append(this.prompt, this.pitchGauge, this.reticle, this.cushionBadge, this.speedGauge, this.controlsEl);
     return bottom;
   }
 
@@ -110,7 +121,7 @@ export class FlightHud {
       case 'orbit': return m.orbit;
       case 'transfer': return m.transfer;
       case 'capture': return m.capture;
-      case 'landing': return m.landing;
+      case 'landing': return sim.landingCushionActive ? m.cushionActive : m.landing;
       default: return '';
     }
   }
@@ -160,6 +171,8 @@ export class FlightHud {
     this.pitchGauge.hidden = !showPitch;
     this.reticle.hidden = sim.phase !== 'transfer';
     this.speedGauge.hidden = !inLanding;
+    this.cushionBadge.hidden = !sim.landingCushionActive;
+    this.controlsEl.textContent = inLanding ? FLIGHT_UI.controlsLanding : FLIGHT_UI.controls;
     if (showPitch) {
       const guide = sim.phase === 'orbit' ? guidePitchDeg(1) : guidePitchDeg(sim.progress);
       this.pitchNow.style.left = `${(sim.pitchDeg / FLIGHT.maxPitchDeg) * 100}%`;

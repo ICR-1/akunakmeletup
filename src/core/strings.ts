@@ -143,7 +143,8 @@ export const FLIGHT_UI = {
     orbit: 'Orbit parkir: stabilkan wahana di cakrawala (pitch 0).',
     transfer: 'Tahan thrust (W) dan jaga penanda prograde di tengah bidik.',
     capture: 'Burn selesai. Tekan F untuk melepas tahap terakhir.',
-    landing: 'Turun perlahan: kecepatan vertikal di bawah 5 m/s, kemiringan di bawah 15 derajat.',
+    landing: 'Pendaratan: Tahan W untuk rem retro. Tahan SPASI untuk bantalan pendaratan mulus (< 2 m/s).',
+    cushionActive: 'BANTUAN PENDARATAN AKTIF — Kecepatan diatur otomatis ke zona aman (< 2 m/s)',
     fairing: 'Fairing terbelah otomatis.',
     eventPending: 'Event: pilih tindakan. Penerbangan dijeda.',
   },
@@ -167,6 +168,7 @@ export const FLIGHT_UI = {
     deviation: 'Simpangan',
   },
   controls: 'W/S thrust · panah / mouse pitch & yaw · Alt kursor · A/D miring (saat mendarat) · F lepas tahap · Shift boost · Spasi presisi',
+  controlsLanding: 'W Rem retro · S Turun cepat · Tahan SPASI untuk bantalan mulus (< 2 m/s) · A/D Seimbangkan · Shift boost',
   result: {
     perfect: 'Pendaratan mulus!',
     success: 'Pendaratan sukses.',

@@ -91,6 +91,7 @@ export class FlightSim {
   touchdown: { outcome: TouchdownOutcome; factor: number } | null = null;
   instrumentsLost: Id[] = [];
   failCodes: ReviewCode[] = [];
+  cushionActive = false;
   /** Penyesuaian delta-v dari event penerbangan (m/s). */
   dvAdjustMs = 0;
   eventsHandledWell = 0;
@@ -140,6 +141,11 @@ export class FlightSim {
     return oldestDepletedIndex(this.staging) >= 0;
   }
 
+  /** Bantuan pendaratan mulus aktif saat tombol presisi (Spasi) ditahan di fase pendaratan. */
+  get landingCushionActive(): boolean {
+    return this.phase === 'landing' && this.cushionActive;
+  }
+
   /**
    * Bahan bakar wahana (kg) yang ditampilkan: penuh selama peluncuran dan orbit (digerakkan roket, PRD 14),
    * turun sebanding kemajuan burn transfer menuju perkiraan sisa, lalu sisa akhir setelah burn.
@@ -179,7 +185,60 @@ export class FlightSim {
     return FLIGHT.rotationRateDegS * this.handling * (input.precision ? FLIGHT.precisionFactor : 1);
   }
 
+  hoverThrottle(): number {
+    const mass = this.cfg.mfKg + (this.landing?.fuelKg ?? 0);
+    return clamp((mass * this.cfg.gravity) / this.cfg.thrustN, 0, 1);
+  }
+
+  private updateLandingThrottle(input: FlightInput, dt: number): void {
+    const l = this.landing;
+    if (!l) return;
+    const hover = this.hoverThrottle();
+    const mass = this.cfg.mfKg + l.fuelKg;
+    const L = FLIGHT.landing;
+
+    if (input.precision) {
+      // Bantalan Pendaratan Presisi (Precision Cushion Assist):
+      // Otomatis mengatur dorongan mesin agar kecepatan turun berada di zona aman touchdown (vy target: -1.8 m/s dekat tanah).
+      const targetVy = l.altitudeM <= 40
+        ? -L.cushionTargetVy
+        : -clamp(L.cushionTargetVy + 0.025 * (l.altitudeM - 40), L.cushionTargetVy, 50);
+      const wantAccel = clamp(2.5 * (targetVy - l.vy) + input.throttle * 5, -this.cfg.gravity, 30);
+      const wantThrottle = clamp(((wantAccel + this.cfg.gravity) * mass) / this.cfg.thrustN, 0, 1);
+      const k = 1 - Math.exp(-8 * dt);
+      this.throttle = clamp(this.throttle + (wantThrottle - this.throttle) * k, 0, 1);
+      return;
+    }
+
+    if (input.throttle > 0) {
+      // W (Rem Retro / Dorong ke Atas):
+      // Respons cepat untuk mengerem laju jatuh wahana.
+      // Jika wahana sudah naik (vy > 1 m/s), batasi dorongan di sekitar hover agar tidak terlempar ke angkasa.
+      const maxThrust = l.vy > 1.0 ? Math.max(hover * 1.2, 0.1) : 1.0;
+      this.throttle = clamp(this.throttle + input.throttle * L.throttleRatePerSec * dt, 0, maxThrust);
+    } else if (input.throttle < 0) {
+      // S (Turun Lebih Cepat):
+      // Potong dorongan dengan cepat agar wahana dapat turun bebas.
+      this.throttle = clamp(this.throttle + input.throttle * L.throttleDecayPerSec * dt, 0, 1);
+    } else {
+      // W/S dilepas:
+      // 1. Jika wahana terlempar naik (vy > 0), segera kurangi throttle agar berhenti meluncur ke atas.
+      if (l.vy > 0) {
+        this.throttle = clamp(this.throttle - L.throttleDecayPerSec * dt, 0, 1);
+      } else {
+        // 2. Jika wahana sedang turun, redam throttle kembali ke arah hover agar penurunan stabil dan terkendali.
+        if (this.throttle > hover) {
+          this.throttle = Math.max(hover, this.throttle - 1.2 * dt);
+        }
+      }
+    }
+  }
+
   private updateThrottle(input: FlightInput, dt: number): void {
+    if (this.phase === 'landing') {
+      this.updateLandingThrottle(input, dt);
+      return;
+    }
     const rate = FLIGHT.throttleRatePerSec * (input.precision ? FLIGHT.precisionFactor : 1);
     if (input.throttle !== 0) this.throttle = clamp(this.throttle + input.throttle * rate * dt, 0, 1);
     // Peluncuran dan transfer: mesin harus terus didorong (W ditahan); dilepas = throttle turun sendiri.
@@ -192,6 +251,7 @@ export class FlightSim {
     if (this.ended) return events;
     this.elapsedSec += dt;
     this.phaseTimeSec += dt;
+    this.cushionActive = this.phase === 'landing' && Boolean(input.precision);
     this.updateThrottle(input, dt);
 
     if (this.phase === 'landing') {
@@ -347,8 +407,11 @@ export class FlightSim {
 
   private stepLandingPhase(input: FlightInput, dt: number, events: FlightEvent[]): void {
     if (!this.landing) return;
+    const rollInput = input.precision && Math.abs(input.roll) < 0.01
+      ? clamp(-this.landing.tiltDeg * 0.15, -1, 1)
+      : input.roll;
     this.landing = stepLanding(this.landing, {
-      throttle01: this.throttle, rotate: input.roll, boost: input.boost, precision: input.precision,
+      throttle01: this.throttle, rotate: rollInput, boost: input.boost, precision: input.precision,
     }, this.landingParams, dt);
     if (!this.landing.landed) return;
 

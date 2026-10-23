@@ -50,8 +50,8 @@ const EARTH_SPIN = 0.012;
 const DEST_SPIN = 0.03;
 const DEST_SEGMENTS = 64;
 const GROUND_DROP = 4000;
-/** Perpindahan Bumi (x, y, z) saat transfer selesai; z negatif = menjauh dari kamera. */
-const EARTH_DEPART_OFFSET: [number, number, number] = [260, 760, -2970];
+/** Perpindahan Bumi (x, y, z) saat transfer; bergerak mundur (-x) dan turun (-y) di balik ekor roket seiring wahana melaju maju. */
+const EARTH_DEPART_OFFSET: [number, number, number] = [-1200, -500, 0];
 /** Eksponen kurva naik: kecil di awal agar lepas landas terasa berat lalu makin cepat. */
 const GROUND_DROP_EXP = 1.6;
 const DEST_RADIUS = 420;
@@ -62,7 +62,7 @@ const DUST_ALTITUDE_M = 60;
 const VISUAL_ALT_REAL_M = 120;
 const LANDING_CAM_FRACTION = 0.72;
 const VISUAL_ALT_COMPRESS = 0.1;
-const EARTH_ORBIT_TOP_Y = -260;
+const EARTH_ORBIT_TOP_Y = -150;
 const CAM_LOOKDOWN_TAN = 0.47;
 const CAM_LOOKDOWN_FULL_ALT_M = 150;
 const FLAME_LENGTH_ROCKET = 3.4;
@@ -73,10 +73,11 @@ const BOOSTER_FLAME_SCALE = 0.8;
 const LIGHT_LAUNCH = { hemi: 1.1, sun: 2.6 } as const;
 const LIGHT_LANDING = { hemi: 0.55, sun: 1.7 } as const;
 /**
- * Planet tujuan berada di arah +x (arah hidung roket saat sudah mendatar), sedikit ke atas dan ke depan kamera
- * (kamera menengok ke arah itu lewat `CAM_HEADING_DEG`) sehingga roket tampak meluncur menuju planet.
+ * Posisi planet tujuan di koridor jalur depan hidung roket (+x).
+ * Bergerak mendekat secara spasial sepanjang transfer (START -> END) sehingga terasa nyata didekati.
  */
-const DEST_BODY_POS: [number, number, number] = [1800, 350, -320];
+const DEST_BODY_POS_START: [number, number, number] = [1550, 40, -820];
+const DEST_BODY_POS_END: [number, number, number] = [1250, 20, -650];
 /** Kamera bergeser ke belakang-samping roket sebesar sudut ini agar hidung roket yang mendatar menghadap ke planet di depan. */
 const CAM_HEADING_DEG = 40;
 const CAM_HEADING_DIST_BOOST = 0.3;
@@ -702,11 +703,11 @@ export class FlightScene extends BaseScene {
     const departure = departureProgress(sim.phase, burned);
     if (this.earth) {
       const shrink = earthScale(departure);
-      this.earth.root.visible = true;
+      this.earth.root.visible = sim.phase !== 'capture' && sim.phase !== 'landing' && sim.phase !== 'ended' && departure < 1;
       this.earth.spin(dt, EARTH_SPIN);
       const rise = smoothstep(0.55, 1, skyT);
-      // Bumi menyusut sambil bergeser ke belakang-kiri-atas (jauh dari kamera) sehingga tetap terlihat mengecil
-      // di belakang roket, bukan jatuh keluar layar atau lenyap.
+      // Bumi menyusut sambil bergeser ke belakang (mundur sepanjang -x dan turun -y di balik semburan mesin)
+      // sehingga roket terasa melaju maju meninggalkan Bumi.
       this.earth.root.scale.setScalar(shrink);
       this.earth.root.position.set(
         EARTH_DEPART_OFFSET[0] * departure,
@@ -718,7 +719,12 @@ export class FlightScene extends BaseScene {
       const s = destScale(sim.phase, departure, burned, sim.crashed ? skyT : sim.progress);
       this.destBody.root.visible = s > 0.001;
       this.destBody.root.scale.setScalar(Math.max(s, 0.001));
-      this.destBody.root.position.set(...DEST_BODY_POS);
+      const posLerp = sim.phase === 'capture' || sim.phase === 'landing' || sim.phase === 'ended' ? 1 : departure;
+      this.destBody.root.position.set(
+        DEST_BODY_POS_START[0] + (DEST_BODY_POS_END[0] - DEST_BODY_POS_START[0]) * posLerp,
+        DEST_BODY_POS_START[1] + (DEST_BODY_POS_END[1] - DEST_BODY_POS_START[1]) * posLerp,
+        DEST_BODY_POS_START[2] + (DEST_BODY_POS_END[2] - DEST_BODY_POS_START[2]) * posLerp,
+      );
       this.destBody.spin(dt, DEST_SPIN);
     }
 

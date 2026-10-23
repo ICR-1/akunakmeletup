@@ -175,6 +175,34 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
 (b) Solusi 1 (Preset Siswa): `STUDENT_PRESETS.moon.cruiser` kini menyertakan `battery_s` (Baterai Kecil 400 Wh, 25 kg). Dengan Pandu-1, seluruh 5 indikator margin tetap berstatus GO (budget +4,75%, massa +4,3%, delta-v +0,35%, daya +4,35%, sinyal +300%). Baterai 400 Wh memberi penyangga energi yang cukup untuk mengemudi rover berkeliling hingga lebih dari 60 detik nyata tanpa henti sebelum terisi ulang kembali oleh RTG.
 (c) Solusi 2 (Hardening Engine Permukaan): `src/rules/power.ts` menambahkan `vehicleEnergyCapacityWh(a)` yang menghitung kapasitas penyangga dari cadangan malam RTG (`rtgPowerW * NIGHT_HOURS` = 720 Wh sesuai PRD 14) bila wahana rakitan kustom tidak memasang modul baterai fisik. Dengan demikian wahana bertenaga RTG tidak akan pernah lagi tiba di permukaan dengan daya 0%. Tes: `tests/rules/presets.test.ts`.
 
+129. **Koreksi Visual Luar Angkasa: Lintasan Bumi Menjauh, Arah Hadap Roket, dan Planet yang Didekati (keluhan pengguna):**
+(a) **Penyebab Kejanggalan:**
+    - *Bumi di Orbit & Menjauh:* `EARTH_ORBIT_TOP_Y` sebelumnya di -260 yang menempatkan lengkung cakrawala Bumi 1,9° di bawah batas bawah viewport (NDC y = -2.42), sehingga di orbit Bumi sama sekali tak tampak. Ketika transfer dimulai, `EARTH_DEPART_OFFSET` bernilai [260, 760, -2970], yang membuat Bumi melompat naik ke langit (y +760) dan maju searah roket (x +260), seolah-olah Bumi terbang ke depan bersama roket.
+    - *Arah Roket & Planet Tujuan:* Roket meluncur mendatar ke arah +X (ke kanan layar). Tetapi `DEST_BODY_POS` diletakkan di [1800, 350, -320], yang jika diproyeksikan ke kamera bernilai x = 1.15, y = 0.90 (terpotong di luar tepi kanan layar!). Roket tampak terbang meleset ke ruang hampa sementara planetnya berada di pojok lain.
+    - *Waktu Muncul Planet Tujuan:* `DEST_REVEAL_FROM` di 0.05 membuat planet tujuan membesar saat roket baru naik beberapa kilometer di atas pad, tidak realistis untuk peluncuran dari Bumi.
+(b) **Solusi & Penyelarasan Fisika/Visual:**
+    - *Lengkung Bumi di Orbit:* `EARTH_ORBIT_TOP_Y` dinaikkan ke -150. Lengkung cakrawala biru dan daratan Bumi kini tampak membentang anggun di 25% bagian bawah layar (y ≈ -0.75) di bawah wahana yang mengorbit.
+    - *Bumi Mundur ke Belakang (Leaving Earth):* `EARTH_DEPART_OFFSET` diatur menjadi [-1200, -500, 0]. Begitu pemain memacu mesin transfer maju (+X), Bumi bergerak mundur (-X) dan turun (-Y) di balik ekor dan semburan api roket, meluncur keluar layar di sisi kiri-bawah secara mulus. Ini memberikan sensasi nyata bahwa wahana memacu maju ke depan meninggalkan Bumi di belakangnya. Begitu transfer selesai (`departure >= 1`), Bumi otomatis di-cull.
+    - *Planet Tujuan Sejajar Koridor Penerbangan:* `DEST_BODY_POS` kini sejajar dengan lintasan hidung roket dan bergerak mendekat secara spasial dari `DEST_BODY_POS_START` [1550, 40, -820] ke `DEST_BODY_POS_END` [1250, 20, -650] (terproyeksi sempurna di kuadran kanan-atas x ≈ 0.55, y ≈ 0.33). Saat pemain mengarahkan kemudi dengan reticle prograde, hidung roket tepat mengarah ke planet tujuan.
+    - *Muncul Natural:* `DEST_REVEAL_FROM` diubah ke 0.55 dan `DEST_REVEAL_TO` ke 0.95 dengan `DEST_SCALE_START` 0.12, sehingga planet tujuan baru muncul bersih setelah roket menembus atmosfer ke luar angkasa saat langit menjadi hitam pekat dan bintang-bintang tampak. Tes: `tests/rules/journey.test.ts`.
+
+130. **Penyempurnaan Kontrol Kecepatan Pendaratan Wahana di Bulan & Mars (keluhan pengguna):**
+(a) **Akar Masalah Kesulitan Kontrol:**
+    - *Rasio Dorong-ke-Berat (TWR) Sangat Tinggi:* Mesin wahana memiliki gaya dorong 40.000 N, sementara bobot wahana di Bulan hanya ~2.600 N (TWR ~15x) dan di Mars ~6.600 N (TWR ~6x). Akibatnya, ambang melayang (*hover*) hanya butuh throttle ~6,7% di Bulan dan ~16,7% di Mars. Lebih dari 90% rentang throttle menghasilkan percepatan naik yang sangat besar (> 20 m/s²).
+    - *Kelambanan & Penguncian Throttle Lama:* `throttleRatePerSec` sebelumnya hanya 0,6/s (butuh 1,67 detik untuk mencapai 100%). Lebih buruk lagi, ketika W dilepas pada fase pendaratan, throttle tidak turun melainkan terkunci di angka tinggi. Akibatnya, saat pemain menekan W untuk mengerem jatuh, wahana justru terlontar terbang kembali ke angkasa, lalu saat menekan S untuk menurunkan mesin, wahana jatuh bebas dan menghantam tanah (> 12 m/s, `CRASH_LANDING`).
+    - *Tombol Spasi Menghambat Respons:* Tombol Spasi (`precision`) sebelumnya memotong laju throttle menjadi 0,24/s (4,16 detik untuk respons penuh), membuat manuver rem darurat terlambat.
+(b) **Solusi & Fitur Kontrol Kecepatan Pendaratan yang Mudah Digunakan:**
+    - *Respons Cepat Retro-Thruster:* `FLIGHT.landing.throttleRatePerSec` dinaikkan menjadi 2,0/s (respons 3,3x lebih cepat, ~0,5 detik ke dorongan penuh) dan `throttleDecayPerSec` diatur ke 2,5/s untuk pemotongan instan saat menekan S.
+    - *Pencegahan Wahana Kabur ke Angkasa:* Ketika pemain melepas tombol W/S saat wahana sedang melaju naik ($v_y > 0$), throttle secara otomatis dipotong cepat (`throttleDecayPerSec`) sehingga wahana langsung berhenti meluncur ke atas. Saat wahana sedang turun ($v_y \le 0$), pelepasan W meredam throttle secara halus kembali ke arah nilai melayang (*hover*), sehingga laju penurunan tetap stabil dan tidak liar.
+    - *Bantuan Pendaratan Mulus (Precision Cushion Assist via Spasi):* Saat pemain menahan tombol `Spasi` pada fase pendaratan:
+      1. Komputer penerbangan otomatis mengatur dorongan mesin untuk mengunci kecepatan vertikal ($v_y$) tepat di **Zona Hijau Sempurna** ($v_y \to -1,8\text{ m/s}$ pada ketinggian dekat tanah $\le 40\text{ m}$, memenuhi syarat $v_y \le 2\text{ m/s}$).
+      2. Kemiringan wahana secara otomatis diseimbangkan kembali ke $0^\circ$ cakrawala jika pemain tidak menekan tombol kemudi A/D.
+      3. Di HUD muncul lencana hijau menyala `[BANTUAN PENDARATAN AKTIF (< 2 m/s)]` dan teks pesan konfirmasi. Pemain yang merasa panik atau ingin mendarat mulus tanpa risiko crash cukup menahan tombol `Spasi`.
+    - *Penyempurnaan Teks & Tampilan HUD:*
+      1. Teks kontrol di bagian bawah HUD berubah dinamis pada fase pendaratan: `W Rem retro · S Turun cepat · Tahan SPASI untuk bantalan mulus (< 2 m/s) · A/D Seimbangkan · Shift boost`.
+      2. Indikator zona kecepatan touchdown di HUD dilengkapi tooltip deskriptif: Zona Sempurna (0–2 m/s), Zona Sukses (2–5 m/s), Zona Kerusakan (5–12 m/s), Zona Hancur (> 12 m/s).
+    - Tes: 4 pengujian unit baru di `tests/rules/flightSim.test.ts` (respons W 2,0/s, pemotongan S 2,5/s, peredaman overshoot $v_y > 0$, dan jaminan touchdown *perfect* saat menahan Spasi). Seluruh 55 berkas tes (528 tes) lulus 100%.
+
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.
