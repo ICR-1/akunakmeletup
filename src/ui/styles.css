@@ -949,7 +949,7 @@ button.launch-button:disabled::before {
   top: 98px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(520px, calc(100vw - 2 * (310px + var(--hud-edge) + var(--hud-gap))));
+  width: min(520px, calc(100vw / var(--ui-scale, 1) - 2 * var(--hud-edge)));
   height: 58px;
   pointer-events: none;
 }
@@ -1096,10 +1096,15 @@ button.launch-button:disabled::before {
   color: #bae6fd;
 }
 
+/* Surface: kompas (98-156px) punya pita sendiri; panel samping dan NOVA mulai di 168px. */
 .objective-panel {
-  top: 130px;
+  top: 168px;
   right: 18px;
   width: 310px;
+  max-height: calc(100vh / var(--ui-scale, 1) - 168px - 96px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #818cf8 transparent;
 }
 .objective-panel h3 {
   margin: 0 0 8px;
