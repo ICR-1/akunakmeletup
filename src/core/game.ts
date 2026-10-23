@@ -1,7 +1,7 @@
 import { getDetail, setDetail } from '../gen/detail';
 import { trackFor } from './musicTheory';
 import * as THREE from 'three';
-import { FIXED_DT, MAX_FRAME_DT, MAX_PIXEL_RATIO, SCENE_IDS, VISUAL, type SceneId } from './constants';
+import { FIXED_DT, MAX_FRAME_DT, MAX_PIXEL_RATIO, SCENE_IDS, UI, VISUAL, type SceneId } from './constants';
 import { markSharedMaterialsDirty } from '../gen/mesh';
 import { terrainMaterial } from '../gen/terrain';
 import { Input } from './input';
@@ -23,6 +23,7 @@ import { createDesignScene } from '../scenes/design';
 import { createFlightScene } from '../scenes/flight';
 import { createSurfaceScene } from '../scenes/surface';
 import { createReviewScene } from '../scenes/review';
+import { SceneTransition } from './transition';
 
 export class Game {
   private readonly storage = browserStorage();
@@ -37,6 +38,9 @@ export class Game {
   private controls: { setDetail(level: 'low' | 'high'): void } | null = null;
   private perf: HTMLElement | null = null;
   private fpsEma = 60;
+  private readonly reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  private readonly transition = new SceneTransition(this.reducedMotion ? 0 : UI.sceneFadeSec);
+  private readonly fadeEl = document.getElementById('scene-fade');
   private perfClock = 0;
   private perfInit = false;
 
@@ -56,7 +60,7 @@ export class Game {
     if (!overlay) throw new Error('Elemen #overlay tidak ditemukan');
     const ctx: GameContext = {
       renderer: this.renderer, canvas, overlay, store: this.store, input: this.input,
-      cursor: this.cursor, catalog: loadCatalog(), go: (id) => this.scenes.switchTo(id),
+      cursor: this.cursor, catalog: loadCatalog(), go: (id) => this.transition.request(id),
     };
     [createBriefingScene, createDesignScene, createFlightScene, createSurfaceScene, createReviewScene].forEach(
       (make) => this.scenes.register(make(ctx)),
@@ -113,6 +117,10 @@ export class Game {
       this.scenes.update(FIXED_DT);
       this.accumulator -= FIXED_DT;
     }
+    // Pudar berjalan di waktu nyata (frameDt), tidak ikut langkah tetap scene.
+    const fade = this.transition.update(frameDt);
+    if (fade.switchTo) this.scenes.switchTo(fade.switchTo);
+    if (this.fadeEl) this.fadeEl.style.opacity = String(fade.opacity);
     this.scenes.render();
     requestAnimationFrame((t) => this.frame(t));
   }
@@ -185,7 +193,10 @@ export class Game {
 
   private handleSceneKeys(): void {
     SCENE_IDS.forEach((id, i) => {
-      if (this.input.consumePressed(`Digit${i + 1}`)) this.scenes.switchTo(id);
+      if (this.input.consumePressed(`Digit${i + 1}`)) {
+        this.transition.cancel(); // jangan sampai pudar tertunda mengalihkan balik
+        this.scenes.switchTo(id);
+      }
     });
   }
 

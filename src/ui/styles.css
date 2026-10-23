@@ -2183,3 +2183,13 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
   pointer-events: none;
 }
 .tooltip strong { display: block; margin-bottom: var(--sp-1); font-size: var(--fs-md); }
+
+/* Pudar antar-scene: opacity diatur dari JS (game.ts); tidak pernah menghalangi klik. */
+#scene-fade {
+  position: fixed;
+  inset: 0;
+  background: #0c0f24;
+  pointer-events: none;
+  z-index: 900;
+  opacity: 0;
+}

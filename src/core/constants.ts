@@ -436,3 +436,9 @@ export const LAUNCH_SITE = {
  * Pulau, pepohonan, dan bangunan (dalam meter) dikecilkan sebesar ini ketika dipasang di scene roket.
  */
 export const LAUNCH_WORLD_SCALE = LANDER_IN_FAIRING_SCALE / VISUAL.landerWorldScale;
+
+/** Konstanta antarmuka umum. */
+export const UI = {
+  /** Lama pudar keluar (dan masuk) saat berpindah scene, detik. */
+  sceneFadeSec: 0.22,
+} as const;
