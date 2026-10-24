@@ -1584,38 +1584,6 @@ button.dialog-next:active { transform: translateY(3px); box-shadow: 0 2px 0 #047
   background: var(--icon-rocket) no-repeat center / contain;
   flex-shrink: 0;
 }
-.dest-button {
-  border-radius: var(--r-md);
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  background: linear-gradient(135deg, rgba(30, 38, 76, 0.85), rgba(20, 26, 56, 0.9));
-  border: 2px solid rgba(129, 140, 248, 0.25);
-  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.25);
-}
-.dest-button:hover:not(:disabled) {
-  border-color: #38bdf8;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25), 0 0 14px rgba(56, 189, 248, 0.3);
-}
-.dest-button:disabled { opacity: 0.45; cursor: not-allowed; }
-button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px; }
-/* Panah "masuk" di kanan kartu agar jelas bisa diklik. */
-.dest-button:not(:disabled)::after {
-  content: '';
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  border-top: 2.5px solid #7dd3fc;
-  border-right: 2.5px solid #7dd3fc;
-  border-radius: 2px;
-  transform: translateY(-50%) rotate(45deg);
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.15s;
-}
-.dest-button:hover:not(:disabled)::after { transform: translate(4px, -50%) rotate(45deg); border-color: #fff; }
-.dest-button .choice-name { font-size: var(--fs-lg); }
-.dest-button .choice-sub { font-size: var(--fs-sm); }
 .dest-stars { margin-left: auto; display: inline-flex; gap: 2px; font-size: var(--fs-lg); line-height: 1; letter-spacing: 0; }
 .dest-star { color: rgba(148, 163, 184, 0.35); }
 .dest-star.on { color: #facc15; text-shadow: 0 0 8px rgba(250, 204, 21, 0.55); }
@@ -1649,6 +1617,264 @@ button.dest-button { position: relative; gap: 6px; padding: 11px 40px 11px 14px;
   font-size: var(--fs-sm);
   font-weight: 700;
   color: #bae6fd;
+}
+
+/* --- Layar judul (menu utama setelah pemuatan): logo ASTRA, Main / Pengaturan / Tentang --- */
+body.title-active #scene-label, body.title-active #scene-hint, body.title-active .settings:not(.open) { visibility: hidden; }
+.title-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  padding: var(--sp-6) var(--sp-4) 48px;
+  pointer-events: auto;
+  background: radial-gradient(ellipse 70% 62% at 50% 44%, rgba(2, 4, 10, 0) 0%, rgba(2, 4, 10, 0.35) 62%, rgba(2, 4, 10, 0.82) 100%);
+  animation: title-in 600ms ease-out both;
+}
+.title-screen.leaving { animation: title-out 320ms ease-in both; pointer-events: none; }
+@keyframes title-in { from { opacity: 0; } }
+@keyframes title-out { to { opacity: 0; transform: scale(1.04); } }
+.title-head { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.title-logo {
+  width: min(640px, 92vw);
+  filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.6));
+  animation: logo-pop 900ms cubic-bezier(0.34, 1.56, 0.64, 1) both, logo-float 6s ease-in-out 900ms infinite;
+}
+.title-logo svg { display: block; width: 100%; height: auto; overflow: visible; }
+@keyframes logo-pop { from { opacity: 0; transform: scale(0.6) translateY(24px); } }
+@keyframes logo-float { 50% { transform: translateY(-8px); } }
+.logo-spark { transform-box: fill-box; transform-origin: center; animation: logo-spark 2.8s ease-in-out infinite; }
+@keyframes logo-spark { 0%, 100% { opacity: 0.25; transform: scale(0.5); } 50% { opacity: 1; transform: scale(1); } }
+.title-subtitle {
+  margin-top: -4px;
+  padding: 6px 28px;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0), rgba(56, 189, 248, 0.24), rgba(56, 189, 248, 0));
+  border-top: 1px solid rgba(125, 211, 252, 0.35);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.35);
+  text-shadow: 0 2px 4px #000;
+  animation: ui-enter 400ms 300ms ease-out both;
+}
+.title-tagline { margin: var(--sp-3) 0 0; font-size: var(--fs-md); color: #cbd5e1; text-shadow: 0 1px 3px #000; animation: ui-enter 400ms 400ms ease-out both; }
+.title-menu { display: flex; flex-direction: column; gap: var(--sp-3); width: min(300px, 82vw); margin-top: var(--sp-6); animation: ui-enter 400ms 500ms ease-out both; }
+button.title-btn.launch-button { margin-top: 0; padding: 15px 18px; font-size: var(--fs-xl); }
+button.title-secondary {
+  width: 100%;
+  padding: 12px 18px;
+  font: inherit;
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  background: linear-gradient(160deg, #1e3a8a, #172554);
+  border: 2px solid rgba(125, 211, 252, 0.6);
+  border-radius: var(--r-lg);
+  box-shadow: 0 5px 0 #0b1437, 0 10px 20px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s, border-color 0.15s;
+}
+button.title-secondary:hover { transform: translateY(-3px); border-color: #e0f2fe; box-shadow: 0 8px 0 #0b1437, 0 14px 24px rgba(56, 189, 248, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.22); }
+button.title-secondary:active { transform: translateY(3px); box-shadow: 0 2px 0 #0b1437, inset 0 2px 0 rgba(255, 255, 255, 0.22); }
+.title-settings::before, .title-info::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  vertical-align: -3px;
+  background: var(--icon-settings) no-repeat center / contain;
+}
+.title-info::before { background-image: var(--icon-star); }
+.title-btn:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
+.title-keys { margin-top: var(--sp-3); font-size: var(--fs-sm); color: #94a3b8; text-shadow: 0 1px 3px #000; }
+@media (hover: none) { .title-keys { display: none; } }
+.title-credit { position: absolute; left: 0; right: 0; bottom: var(--sp-4); text-align: center; font-size: var(--fs-xs); color: #64748b; letter-spacing: 0.04em; }
+.title-about {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--sp-4);
+  background: rgba(2, 4, 10, 0.62);
+  backdrop-filter: blur(3px);
+  animation: title-in 200ms ease-out both;
+}
+.title-about-card {
+  position: relative;
+  width: min(520px, 100%);
+  padding: 34px 28px 22px;
+  background: var(--surface-panel);
+  border: var(--border-panel);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-panel);
+  color: #e2e8f0;
+  animation: ui-enter 240ms ease-out both;
+}
+.title-about-card p { margin: 0 0 10px; font-size: var(--fs-md); line-height: 1.55; }
+.about-steps { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); margin-bottom: var(--sp-4); }
+.about-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 4px;
+  border-radius: var(--radius-pill);
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  color: #e0f2fe;
+}
+.about-step b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: #facc15; color: #422006; font-size: var(--fs-xs); }
+button.launch-button.about-close { margin-top: var(--sp-3); }
+button.launch-button.about-close::before { content: none; }
+
+/* --- Menu karusel pilih tujuan: planet 3D besar di tengah, nama + Mulai di bawah, panah di tepi --- */
+.mission-select { position: absolute; inset: 0; pointer-events: none; }
+.ms-top {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 32px));
+  text-align: center;
+  pointer-events: auto;
+  animation: ui-enter 220ms ease-out both;
+}
+.ms-top .mode-tabs { margin-bottom: var(--sp-2); }
+.ms-top .mode-hint { margin: 0; text-shadow: 0 1px 3px #000; }
+.ms-top .progress-line { margin-top: var(--sp-1); padding-top: 0; border-top: none; text-shadow: 0 1px 3px #000; }
+.ms-stage {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  padding: 0 var(--sp-6);
+  pointer-events: none;
+}
+.ms-info {
+  flex: 0 1 440px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  text-align: center;
+  pointer-events: auto;
+  animation: ui-enter 220ms ease-out both;
+}
+.ms-info[data-dir='next'] { animation: ms-from-right 280ms cubic-bezier(0.34, 1.3, 0.64, 1) both; }
+.ms-info[data-dir='prev'] { animation: ms-from-left 280ms cubic-bezier(0.34, 1.3, 0.64, 1) both; }
+@keyframes ms-from-right { from { opacity: 0; transform: translateX(48px); } }
+@keyframes ms-from-left { from { opacity: 0; transform: translateX(-48px); } }
+.ms-kicker {
+  font-size: var(--fs-sm);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7dd3fc;
+  text-shadow: 0 1px 3px #000;
+}
+.ms-name {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-4);
+  font-size: var(--fs-display);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 3px 0 rgba(15, 23, 42, 0.9), 0 0 24px rgba(56, 189, 248, 0.45);
+}
+/* Garis hias di kiri-kanan nama (seperti sketsa referensi). */
+.ms-name::before, .ms-name::after {
+  content: '';
+  width: 54px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, #38bdf8);
+}
+.ms-name::after { background: linear-gradient(90deg, #38bdf8, transparent); }
+.ms-name.locked { color: #94a3b8; text-shadow: 0 3px 0 rgba(15, 23, 42, 0.9); }
+.ms-stars { margin: 0; font-size: var(--fs-2xl); gap: var(--sp-1); }
+.ms-chips { justify-content: center; }
+.ms-locked {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: #cbd5e1;
+  text-shadow: 0 1px 3px #000;
+}
+.ms-locked::before { content: ''; width: 16px; height: 16px; background: var(--icon-lock) no-repeat center / contain; }
+button.launch-button.ms-play { width: auto; min-width: 260px; margin-top: var(--sp-2); padding: 15px 34px; font-size: var(--fs-xl); }
+.ms-dots { display: flex; gap: var(--sp-2); margin-top: var(--sp-1); }
+.ms-dot {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: 2px solid rgba(186, 230, 253, 0.6);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  cursor: pointer;
+  transition: width 0.2s ease, background 0.2s ease;
+}
+.ms-dot.active { width: 28px; background: #38bdf8; border-color: #38bdf8; }
+.ms-keys { font-size: var(--fs-sm); color: #94a3b8; text-shadow: 0 1px 3px #000; }
+@media (hover: none) { .ms-keys { display: none; } }
+.ms-arrow {
+  flex-shrink: 0;
+  position: relative;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(125, 211, 252, 0.7);
+  background: linear-gradient(160deg, #1e3a8a, #172554);
+  box-shadow: 0 5px 0 #0b1437, 0 10px 22px rgba(0, 0, 0, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s, border-color 0.15s;
+}
+.ms-arrow::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-top: 4px solid #e0f2fe;
+  border-right: 4px solid #e0f2fe;
+  border-radius: 2px;
+  transform: translate(-65%, -50%) rotate(45deg);
+}
+.ms-arrow.prev::before { transform: translate(-35%, -50%) rotate(-135deg); }
+.ms-arrow:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: #e0f2fe;
+  box-shadow: 0 8px 0 #0b1437, 0 14px 26px rgba(56, 189, 248, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+.ms-arrow:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 2px 0 #0b1437, inset 0 2px 0 rgba(255, 255, 255, 0.25); }
+.ms-arrow:disabled { opacity: 0.3; cursor: default; }
+@media (max-width: 860px) {
+  .ms-stage { padding: 0 var(--sp-3); bottom: var(--sp-5); }
+  .ms-arrow { width: 46px; height: 46px; }
+  .ms-name { font-size: var(--fs-2xl); gap: var(--sp-3); }
+  .ms-name::before, .ms-name::after { width: 28px; }
+  button.launch-button.ms-play { min-width: 0; width: 100%; }
 }
 
 /* --- Review Misi & Perolehan Bintang --- */

@@ -45,12 +45,22 @@ export function orbitPosition(orbit: number, ecc: number, angle: number): [numbe
   return [orbit * Math.cos(angle) - orbit * ecc, b * Math.sin(angle)];
 }
 
-export type OrreryFocus = 'overview' | 'earth' | 'mars';
+export type OrreryFocus = 'overview' | 'earth' | 'moon' | 'mars';
 
-/** Planet yang dipusatkan kamera untuk tiap fokus (destinasi: Bulan di dekat Bumi, Mars). */
-export const FOCUS_PLANET: Record<OrreryFocus, PlanetSpec['key'] | null> = { overview: null, earth: 'earth', mars: 'mars' };
+/** Planet yang dipusatkan kamera untuk tiap fokus (Bulan bukan planet; orrery menanganinya sendiri). */
+export const FOCUS_PLANET: Record<OrreryFocus, PlanetSpec['key'] | null> = { overview: null, earth: 'earth', moon: null, mars: 'mars' };
 
 /** Peta destinasi game ke fokus orrery. */
 export function focusForDestination(destinationId: string): OrreryFocus {
-  return destinationId === 'mars' ? 'mars' : 'earth';
+  return destinationId === 'mars' ? 'mars' : 'moon';
+}
+
+/**
+ * Bingkai kamera menu karusel untuk planet berjari-jari `radius`: `dist` membuat diameter planet mengisi `fill` dari
+ * tinggi layar (FOV vertikal `fovDeg`), `drop` menurunkan titik bidik agar planet duduk `lift` (NDC) di atas tengah.
+ */
+export function carouselFrame(radius: number, fovDeg: number, fill: number, lift: number): { dist: number; drop: number } {
+  const t = Math.tan((fovDeg * Math.PI) / 360);
+  const dist = radius / (fill * t);
+  return { dist, drop: lift * dist * t };
 }

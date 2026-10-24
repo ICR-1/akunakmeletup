@@ -19,7 +19,7 @@ export function createSettings(
   host: HTMLElement,
   initial: ControlsState,
   onChange: (state: ControlsState) => void,
-): { setDetail(level: DetailLevel): void } {
+): { setDetail(level: DetailLevel): void; open(): void } {
   let textScale = initial.textScale;
   let shadows = initial.shadows;
   let detail = initial.detail;
@@ -141,6 +141,9 @@ export function createSettings(
   root.append(panel, toggle);
   host.appendChild(root);
   return {
+    open() {
+      setOpen(true);
+    },
     setDetail(level) {
       if (level === detail) return;
       detail = level;

@@ -9,7 +9,9 @@ import { createStars } from './sky';
 const ORBIT_SEGMENTS = 160;
 const ORBIT_COLOR = 0x5b7bb0;
 const ORBIT_OPACITY = 0.28;
+const ORBIT_MIN_FADE = 0.3;
 const MOON_ANGLE_START = 1.2;
+const MOON_SPIN = 0.18;
 
 interface Body { spec: PlanetSpec; obj: PlanetObject; angle: number; holder: THREE.Group; orbitLine: THREE.LineLoop }
 
@@ -91,24 +93,34 @@ export class Orrery {
     b.holder.position.set(x, 0, z);
   }
 
-  /** Maju waktu: planet mengorbit dan berputar, Matahari berdenyut. */
-  update(dtSec: number): void {
+  /**
+   * Maju waktu: planet mengorbit dan berputar, Matahari berdenyut. `orbitRate` (0-1) memperlambat gerak orbit saja,
+   * agar planet yang sedang dibingkai kamera diam di tempat tapi tetap berputar pada porosnya.
+   */
+  update(dtSec: number, orbitRate = 1): void {
     this.clock += dtSec;
     this.sun?.update(this.clock);
+    // Garis orbit memudar saat orbit dihentikan (planet sedang dibingkai) agar tidak memotong latar.
+    const orbitOpacity = ORBIT_OPACITY * Math.max(ORBIT_MIN_FADE, orbitRate);
     for (const b of this.bodies) {
-      b.angle += orbitalSpeed(b.spec.orbit) * dtSec;
+      (b.orbitLine.material as THREE.LineBasicMaterial).opacity = orbitOpacity;
+      b.angle += orbitalSpeed(b.spec.orbit) * dtSec * orbitRate;
       this.place(b);
       b.obj.spin(dtSec, b.spec.spin);
     }
     if (this.moon) {
-      this.moon.angle += MOON_SPEC.speed * dtSec;
+      this.moon.angle += MOON_SPEC.speed * dtSec * orbitRate;
       this.moon.pivot.rotation.y = this.moon.angle;
-      this.moon.obj.spin(dtSec, 0.1);
+      this.moon.obj.spin(dtSec, MOON_SPIN);
     }
   }
 
   /** Posisi dunia planet fokus (atau pusat tata surya untuk overview) dan jari-jarinya. */
   focusPoint(focus: OrreryFocus, out: THREE.Vector3): { radius: number } {
+    if (focus === 'moon' && this.moon) {
+      this.moon.obj.root.getWorldPosition(out);
+      return { radius: MOON_SPEC.radius };
+    }
     const key = FOCUS_PLANET[focus];
     const b = key ? this.bodies.find((x) => x.spec.key === key) : null;
     if (!b) {

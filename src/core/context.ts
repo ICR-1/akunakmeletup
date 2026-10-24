@@ -15,4 +15,6 @@ export interface GameContext {
   catalog: Catalog;
   cursor: CursorManager;
   go(scene: SceneId): void;
+  /** Buka panel Pengaturan (dipakai tombol di layar judul). */
+  openSettings(): void;
 }

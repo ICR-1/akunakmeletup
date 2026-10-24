@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  focusForDestination, MOON_SPEC, orbitalSpeed, orbitPosition, SOLAR_SYSTEM, SUN_RADIUS,
+  carouselFrame, focusForDestination, MOON_SPEC, orbitalSpeed, orbitPosition, SOLAR_SYSTEM, SUN_RADIUS,
 } from '../../src/gen/solarSystemData';
 import { PLANET_KEYS } from '../../src/gen/planetTextures';
 
@@ -47,8 +47,15 @@ describe('data orrery (visual)', () => {
     expect(Math.hypot(cx, cz)).toBeCloseTo(10, 10);
   });
   it('destinasi game dipetakan ke fokus kamera', () => {
-    expect(focusForDestination('moon')).toBe('earth');
+    expect(focusForDestination('moon')).toBe('moon');
     expect(focusForDestination('mars')).toBe('mars');
-    expect(focusForDestination('apa-saja')).toBe('earth');
+    expect(focusForDestination('apa-saja')).toBe('moon');
+  });
+  it('bingkai karusel: diameter planet mengisi bagian layar yang diminta, lebih jauh untuk planet besar', () => {
+    const { dist, drop } = carouselFrame(0.3, 60, 0.36, 0.2);
+    const half = dist * Math.tan(Math.PI / 6);
+    expect((2 * 0.3) / (2 * half)).toBeCloseTo(0.36, 10);
+    expect(drop / half).toBeCloseTo(0.2, 10);
+    expect(carouselFrame(0.7, 60, 0.36, 0.2).dist).toBeGreaterThan(dist);
   });
 });

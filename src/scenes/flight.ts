@@ -8,6 +8,7 @@ import { pickFlightEvent, rollChoice } from '../events/eventSystem';
 import { createFlame, disposeFlame, ParticleField, setFlame } from '../gen/effects';
 import { buildLander } from '../gen/lander';
 import { SpaceDust } from '../gen/spaceDust';
+import { padSmokeStrength, SmokeCloud, trailStrength } from '../gen/smoke';
 import { disposeTree } from '../gen/mesh';
 import { departureProgress, destScale, earthScale } from '../rules/journey';
 import { Explosion, stepBallistic } from '../gen/explosion';
@@ -98,6 +99,22 @@ const EXPLOSION_GRAVITY = 9.8;
 const CRASH_DEBRIS_LIFE_SEC = 20;
 /** Serpihan diam sedikit di atas tanah agar tidak terbenam. */
 const SHARD_GROUND_OFFSET_M = 0.15;
+/**
+ * Asap peluncuran (satuan roket; 1 satuan ~ 4,3 m). Awan landasan: semburan menabrak parit api dan bergulung ke dua sisi
+ * (sumbu x) plus sebagian melingkar; berhenti setelah nozzle naik `fadeHeight` x tinggi roket. Jejak: tiang asap yang
+ * tertinggal di udara bawah, menipis seiring udara menipis.
+ */
+const PAD_SMOKE = {
+  pool: 900, ratePerSec: 80, fadeHeight: 1.6, jetShare: 0.7, jetSpread: 0.35, speed: [18, 34], up: [0.5, 3], life: [9, 13],
+  size0: 2.4, size1: [14, 24], drag: 0.9, buoyancy: 0.8, floorY: 0.6, gray: [0.8, 0.97], spin: 0.25,
+} as const;
+const TRAIL_SMOKE = {
+  pool: 1000, minAltitude: 1.5, spacing: 0.9, maxPerFrame: 10, startOffset: 1.5, speed: [3, 7], jitter: 1.5, life: [7, 10],
+  size0: 5, size1: [12, 20], drag: 0.5, buoyancy: 0.35, gray: [0.84, 0.95], spin: 0.3,
+} as const;
+/** Lampu jingga di bawah nozzle yang menerangi landasan, menara, dan badan roket saat mesin menyala. */
+const ENGINE_LIGHT = { color: 0xffa04a, intensity: 160, distance: 110, decay: 1.4, flicker: 0.15 } as const;
+const SMOKE_GLOW = new THREE.Color(0xff8a3a);
 
 interface Debris {
   group: THREE.Group; vel: THREE.Vector3; spin: THREE.Vector3; age: number;
@@ -139,6 +156,12 @@ export class FlightScene extends BaseScene {
   private stars: THREE.Points | null = null;
   private smoke: ParticleField | null = null;
   private dust: ParticleField | null = null;
+  /** Awan asap landasan dan jejak asap; anak `world` agar tertinggal di tempat saat roket naik. */
+  private padSmoke: SmokeCloud | null = null;
+  private trailSmoke: SmokeCloud | null = null;
+  private padSmokeDebt = 0;
+  private trailLast: THREE.Vector3 | null = null;
+  private readonly engineLight = new THREE.PointLight(ENGINE_LIGHT.color, 0, ENGINE_LIGHT.distance, ENGINE_LIGHT.decay);
   private readonly debris: Debris[] = [];
   private explosions: Explosion[] = [];
   private vrng: Rng = createRng(1);
@@ -161,7 +184,8 @@ export class FlightScene extends BaseScene {
 
   constructor(ctx: GameContext) {
     super(ctx);
-    this.scene.add(this.hemi, this.sun);
+    // Lampu mesin selalu ada (intensitas 0 saat mati) agar jumlah lampu tetap dan shader tidak dikompilasi ulang.
+    this.scene.add(this.hemi, this.sun, this.engineLight);
     this.sun.position.set(300, 500, 200);
     this.scene.add(this.pivot);
   }
@@ -218,6 +242,12 @@ export class FlightScene extends BaseScene {
     ground.add(this.island.group, buildFacilityComplex(cfg.seed));
     this.world.add(ground, this.pad.group, createClouds(cfg.seed));
     this.world.position.y = this.padY;
+    const lite = isHigh() ? 1 : 0.5;
+    this.padSmoke = new SmokeCloud(Math.round(PAD_SMOKE.pool * lite), { drag: PAD_SMOKE.drag, buoyancy: PAD_SMOKE.buoyancy, floorY: PAD_SMOKE.floorY });
+    this.trailSmoke = new SmokeCloud(Math.round(TRAIL_SMOKE.pool * lite), { drag: TRAIL_SMOKE.drag, buoyancy: TRAIL_SMOKE.buoyancy, floorY: PAD_SMOKE.floorY });
+    this.world.add(this.padSmoke.points, this.trailSmoke.points);
+    this.padSmokeDebt = 0;
+    this.trailLast = null;
     this.scene.add(this.world);
     this.mountedLander = buildLander(this.assembly.modules, this.assembly.instruments);
     mountLander(this.model, this.mountedLander);
@@ -271,6 +301,10 @@ export class FlightScene extends BaseScene {
     if (this.landingLander) { this.scene.remove(this.landingLander); disposeTree(this.landingLander); }
     for (const f of [this.flame, this.landingFlame, ...this.boosterFlames.map((b) => b.flame)]) if (f) { f.removeFromParent(); disposeFlame(f); }
     this.boosterFlames = [];
+    for (const c of [this.padSmoke, this.trailSmoke]) if (c) { c.points.removeFromParent(); c.dispose(); }
+    this.padSmoke = this.trailSmoke = null;
+    this.trailLast = null;
+    this.engineLight.intensity = 0;
     if (this.world) { this.scene.remove(this.world); disposeWorld(this.world); }
     for (const p of [this.earth, this.destBody]) if (p) { this.scene.remove(p.root); p.dispose(); }
     if (this.terrain) { this.scene.remove(this.terrain.mesh); this.terrain.dispose(); }
@@ -332,6 +366,7 @@ export class FlightScene extends BaseScene {
     if (sim.jettisonPrompt && !this.wasPrompt) audio.alarm();
     this.wasPrompt = sim.jettisonPrompt;
     this.syncWorld(dt);
+    this.updateLaunchSmoke(dt);
     this.smoke?.update(dt);
     this.dust?.update(dt);
     this.updateDebris(dt);
@@ -658,6 +693,70 @@ export class FlightScene extends BaseScene {
         }
       }
     }
+  }
+
+  /**
+   * Asap dan cahaya peluncuran: awan bergulung dari parit api selama roket masih rendah, tiang asap yang tertinggal di
+   * udara bawah, dan lampu mesin jingga. Posisi dihitung dalam ruang `world` sehingga asap diam di tempat saat dunia turun.
+   */
+  private updateLaunchSmoke(dt: number): void {
+    const sim = this.sim, world = this.world, model = this.model, flame = this.flame;
+    if (!sim || !world || !model || !flame) return;
+    const burning = (sim.phase === 'launch' || sim.phase === 'transfer') && sim.throttle > 0 && !sim.ended;
+    const nozzle = flame.getWorldPosition(new THREE.Vector3());
+    const back = this.axisDir().negate();
+    const r = this.vrng;
+
+    this.engineLight.position.copy(nozzle).addScaledVector(back, model.radius * 1.5);
+    this.engineLight.intensity = burning ? sim.throttle * ENGINE_LIGHT.intensity * (1 + rngRange(r, -1, 1) * ENGINE_LIGHT.flicker) : 0;
+
+    this.padSmoke?.update(dt);
+    this.trailSmoke?.update(dt);
+    if (dt === 0 || !this.padSmoke || !this.trailSmoke) return;
+    const launch = burning && sim.phase === 'launch';
+    const altitude = this.padY - world.position.y;
+    const R = model.radius;
+    const P = PAD_SMOKE, T = TRAIL_SMOKE;
+    const color = new THREE.Color();
+    const lite = isHigh() ? 1 : 0.5;
+
+    const pad = launch ? padSmokeStrength(sim.throttle, altitude, model.totalHeight * P.fadeHeight) : 0;
+    this.padSmoke.setGlow(pad, SMOKE_GLOW);
+    this.padSmokeDebt += pad * P.ratePerSec * lite * dt;
+    for (; this.padSmokeDebt >= 1; this.padSmokeDebt -= 1) {
+      const jet = r() < P.jetShare;
+      const a = jet ? (r() < 0.5 ? 0 : Math.PI) + rngRange(r, -P.jetSpread, P.jetSpread) : rngRange(r, 0, Math.PI * 2);
+      const speed = rngRange(r, P.speed[0], P.speed[1]) * (0.6 + 0.4 * sim.throttle) * (jet ? 1 : 0.6);
+      const g = rngRange(r, P.gray[0], P.gray[1]);
+      this.padSmoke.emit(
+        new THREE.Vector3(Math.cos(a) * R * 1.2, P.floorY + 0.2, Math.sin(a) * R * 1.2),
+        new THREE.Vector3(Math.cos(a) * speed, rngRange(r, P.up[0], P.up[1]), Math.sin(a) * speed),
+        rngRange(r, P.life[0], P.life[1]), R * P.size0, rngRange(r, P.size1[0], P.size1[1]),
+        color.setRGB(g, g * 0.99, g * 0.97), rngRange(r, 0, Math.PI * 2), rngRange(r, -P.spin, P.spin),
+      );
+    }
+
+    world.updateMatrixWorld();
+    // Jejak mulai sedikit di belakang nozzle agar inti api tetap terlihat.
+    const here = world.worldToLocal(nozzle.clone().addScaledVector(back, model.radius * T.startOffset));
+    const trail = launch && altitude > T.minAltitude ? trailStrength(sim.progress) : 0;
+    this.trailSmoke.setGlow(trail, SMOKE_GLOW);
+    if (trail <= 0.01) { this.trailLast = null; return; }
+    const from = this.trailLast ?? here;
+    const n = Math.min(T.maxPerFrame, Math.max(1, Math.ceil(from.distanceTo(here) / (R * T.spacing))));
+    const p = new THREE.Vector3();
+    for (let j = 1; j <= n; j++) {
+      if (j < n && r() > lite) continue;
+      p.lerpVectors(from, here, j / n);
+      const v = back.clone().multiplyScalar(rngRange(r, T.speed[0], T.speed[1]))
+        .add(new THREE.Vector3(rngRange(r, -T.jitter, T.jitter), rngRange(r, -T.jitter, T.jitter), rngRange(r, -T.jitter, T.jitter)));
+      const g = rngRange(r, T.gray[0], T.gray[1]);
+      this.trailSmoke.emit(
+        p, v, rngRange(r, T.life[0], T.life[1]), R * T.size0, R * rngRange(r, T.size1[0], T.size1[1]),
+        color.setRGB(g, g, g * 0.98), rngRange(r, 0, Math.PI * 2), rngRange(r, -T.spin, T.spin), trail,
+      );
+    }
+    this.trailLast = here;
   }
 
   private applyShake(dt: number): void {

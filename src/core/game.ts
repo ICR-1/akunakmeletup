@@ -35,7 +35,7 @@ export class Game {
   private accumulator = 0;
   private last = 0;
   private quality!: AdaptiveQuality;
-  private controls: { setDetail(level: 'low' | 'high'): void } | null = null;
+  private controls: { setDetail(level: 'low' | 'high'): void; open(): void } | null = null;
   private perf: HTMLElement | null = null;
   private fpsEma = 60;
   private readonly reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
@@ -61,6 +61,7 @@ export class Game {
     const ctx: GameContext = {
       renderer: this.renderer, canvas, overlay, store: this.store, input: this.input,
       cursor: this.cursor, catalog: loadCatalog(), go: (id) => this.transition.request(id),
+      openSettings: () => this.controls?.open(),
     };
     [createBriefingScene, createDesignScene, createFlightScene, createSurfaceScene, createReviewScene].forEach(
       (make) => this.scenes.register(make(ctx)),
