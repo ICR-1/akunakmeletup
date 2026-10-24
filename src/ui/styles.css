@@ -1693,7 +1693,30 @@ button.title-secondary:active { transform: translateY(3px); box-shadow: 0 2px 0 
   background: var(--icon-settings) no-repeat center / contain;
 }
 .title-info::before { background-image: var(--icon-star); }
-.title-btn:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
+/* Sorotan pilihan (panah/hover/Tab): cincin kuning, tombol terangkat, dan panah penunjuk berdenyut di kiri. */
+.title-btn { position: relative; }
+.title-btn:focus-visible { outline: none; }
+button.title-btn.is-selected { transform: translateY(-3px); filter: brightness(1.1); }
+button.launch-button.title-btn.is-selected { box-shadow: 0 0 0 3px #facc15, 0 9px 0 #047857, 0 14px 26px rgba(16, 185, 129, 0.45), var(--btn-gloss); }
+button.title-secondary.is-selected { border-color: #e0f2fe; box-shadow: 0 0 0 3px #facc15, 0 8px 0 #0b1437, 0 14px 24px rgba(56, 189, 248, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.22); }
+.title-btn.is-selected::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -30px;
+  width: 0;
+  height: 0;
+  border-top: 9px solid transparent;
+  border-bottom: 9px solid transparent;
+  border-left: 14px solid #facc15;
+  filter: drop-shadow(0 2px 0 #a16207);
+  transform: translateY(-50%);
+  animation: title-pointer 0.9s ease-in-out infinite;
+}
+@keyframes title-pointer { 50% { transform: translate(6px, -50%); } }
+button.title-btn.is-selected:active { transform: translateY(3px); }
+/* Menu tidak berisi teks yang bisa diketik: jangan tampilkan caret (mis. mode caret browsing) atau seleksi teks. */
+.title-screen, .mission-select { user-select: none; caret-color: transparent; }
 .title-keys { margin-top: var(--sp-3); font-size: var(--fs-sm); color: #94a3b8; text-shadow: 0 1px 3px #000; }
 @media (hover: none) { .title-keys { display: none; } }
 .title-credit { position: absolute; left: 0; right: 0; bottom: var(--sp-4); text-align: center; font-size: var(--fs-xs); color: #64748b; letter-spacing: 0.04em; }

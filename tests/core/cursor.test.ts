@@ -119,4 +119,19 @@ describe('CursorManager & Smart Auto Toggle Cursor', () => {
 
     mgr.dispose();
   });
+
+  it('prepareSceneChange mengunci kursor saat pindah ke scene 3D diminta (masih dalam gestur), bukan ke scene 2D', () => {
+    const requestLock = vi.fn();
+    const mgr = new CursorManager({ requestPointerLock: requestLock } as unknown as HTMLCanvasElement);
+    mgr.prepareSceneChange('review');
+    expect(requestLock).not.toHaveBeenCalled();
+    expect(mgr.isEnabled).toBe(false);
+    mgr.prepareSceneChange('flight');
+    expect(requestLock).toHaveBeenCalledTimes(1);
+    // Predikat scene lama (mis. panel hasil Penerbangan) tidak menghalangi kunci untuk scene Permukaan.
+    mgr.setPredicate(() => true);
+    mgr.prepareSceneChange('surface');
+    expect(requestLock).toHaveBeenCalledTimes(2);
+    mgr.dispose();
+  });
 });

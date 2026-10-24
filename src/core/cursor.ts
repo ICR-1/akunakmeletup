@@ -2,6 +2,9 @@ import type { SceneId } from './constants';
 
 export type CursorPredicate = () => boolean;
 
+/** Scene gameplay 3D yang memakai pointer lock. */
+const is3d = (sceneId: SceneId): boolean => sceneId === 'flight' || sceneId === 'surface';
+
 /**
  * Daftar kode tombol gameplay di scene 3D (penerbangan dan permukaan).
  * Menekan tombol ini saat kursor tidak sedang diwajibkan oleh dialog/modal
@@ -181,9 +184,21 @@ export class CursorManager {
     }
   }
 
+  /**
+   * Dipanggil saat perpindahan scene diminta (masih di dalam gestur klik/tombol pemain). Scene baru baru masuk setelah
+   * layar pudar, di luar gestur, dan browser menolak pointer lock tanpa gestur; jadi kunci dimulai di sini bila
+   * tujuannya scene 3D. Predikat scene lama dibuang karena tidak berlaku lagi untuk scene tujuan.
+   */
+  prepareSceneChange(sceneId: SceneId): void {
+    if (!is3d(sceneId)) return;
+    this.setEnabled(true);
+    this.predicate = null;
+    this.lock();
+  }
+
   /** Tangani perpindahan scene otomatis. */
   onSceneChange(sceneId: SceneId): void {
-    const is3dScene = sceneId === 'flight' || sceneId === 'surface';
+    const is3dScene = is3d(sceneId);
     this.setEnabled(is3dScene);
     if (is3dScene) {
       this.lock();
