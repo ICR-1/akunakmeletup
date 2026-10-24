@@ -130,3 +130,14 @@ export function selectableDestinationIds(save: SaveData, destinations: Destinati
   const mvp = destinations.filter((d) => d.mvp).map((d) => d.id);
   return modeRules(mode).allUnlocked ? mvp : mvp.filter((id) => isUnlocked(save, id));
 }
+
+/**
+ * Indeks tujuan yang dipilih saat menu dibuka: tujuan terbuka pertama yang belum berbintang (misi berikutnya),
+ * atau tujuan terbuka terakhir bila semua sudah dimainkan; 0 bila tidak ada yang terbuka.
+ */
+export function suggestedDestinationIndex(ids: Id[], selectable: Id[], stars: Record<Id, number>): number {
+  const fresh = ids.findIndex((id) => selectable.includes(id) && !(stars[id] > 0));
+  if (fresh >= 0) return fresh;
+  for (let i = ids.length - 1; i >= 0; i--) if (selectable.includes(ids[i])) return i;
+  return 0;
+}

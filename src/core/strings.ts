@@ -358,6 +358,10 @@ export const STORY_UI = {
   budget: 'Budget misi',
   best: 'terbaik',
   start: 'Mulai misi',
+  lockedButton: 'Terkunci',
+  prevDestination: 'Tujuan sebelumnya',
+  nextDestination: 'Tujuan berikutnya',
+  carouselKeys: '[←] [→] ganti tujuan · [Enter] mulai',
   progress: 'Progres',
   sciencePoints: 'Poin sains',
   beacons: 'Beacon',
@@ -380,6 +384,26 @@ export const STORY_UI = {
   textSize: 'Ukuran teks',
   on: 'hidup',
   off: 'mati',
+} as const;
+
+/** Layar judul (menu utama) yang muncul sekali setelah pemuatan awal. */
+export const TITLE_UI = {
+  logo: 'ASTRA',
+  subtitle: 'Space Mission Architect',
+  tagline: 'Rancang wahana, luncurkan roket, dan jelajahi Bulan serta Mars.',
+  play: 'Main',
+  settings: 'Pengaturan',
+  about: 'Tentang',
+  credit: 'Badan Antariksa Khatulistiwa · Hackathon NASA Space Apps',
+  keys: '[↑] [↓] pilih · [Enter] buka',
+  aboutTitle: 'Tentang ASTRA',
+  aboutSteps: ['Rancang', 'Luncurkan', 'Jelajahi'],
+  aboutBody: [
+    'ASTRA: Space Mission Architect adalah game perancang misi antariksa. Rakit roket dan wahana dengan anggaran terbatas, terbangkan sampai mendarat, lalu jelajahi permukaan Bulan dan Mars untuk mengumpulkan data sains.',
+    'Semua model 3D, tekstur, musik, dan efek suara dibuat secara prosedural oleh kode, tanpa aset eksternal. Garis pantai Bumi memakai data Natural Earth (domain publik).',
+    'Dibuat untuk hackathon NASA Space Apps. Badan Antariksa Khatulistiwa adalah badan fiksi.',
+  ],
+  close: 'Tutup',
 } as const;
 
 export const REVIEW_UI = {

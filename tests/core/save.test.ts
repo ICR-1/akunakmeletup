@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { loadSave, writeSave, type StorageLike } from '../../src/core/save';
 import { PROGRESS } from '../../src/core/constants';
 import { defaultMission } from '../../src/core/missionBuilder';
-import { defaultSave, isUnlocked, missionSucceeded, modeRules, nextDestinationId, recordMission, sanitizeSave, selectableDestinationIds } from '../../src/rules/progress';
+import { defaultSave, isUnlocked, missionSucceeded, modeRules, nextDestinationId, recordMission, sanitizeSave, selectableDestinationIds, suggestedDestinationIndex } from '../../src/rules/progress';
 import type { MissionOutcome } from '../../src/rules/missionResult';
 import { computeScore, type ScoreInput } from '../../src/rules/score';
 import { linesFor } from '../../src/rules/dialogs';
@@ -205,5 +205,18 @@ describe('mode Free Design', () => {
     const save = defaultSave();
     expect(modeRules('free').recordsProgress).toBe(false);
     expect(save.unlocked).toEqual(['moon']);
+  });
+});
+
+describe('menu karusel: tujuan yang dipilih saat dibuka', () => {
+  const ids = ['moon', 'mars'];
+  it('memilih misi terbuka yang belum dimainkan', () => {
+    expect(suggestedDestinationIndex(ids, ['moon'], {})).toBe(0);
+    expect(suggestedDestinationIndex(ids, ['moon', 'mars'], { moon: 2 })).toBe(1);
+  });
+  it('semua sudah berbintang atau terkunci: tujuan terbuka terakhir, atau 0', () => {
+    expect(suggestedDestinationIndex(ids, ['moon', 'mars'], { moon: 3, mars: 1 })).toBe(1);
+    expect(suggestedDestinationIndex(ids, ['moon'], { moon: 3 })).toBe(0);
+    expect(suggestedDestinationIndex(ids, [], {})).toBe(0);
   });
 });
