@@ -93,6 +93,8 @@ export class BriefingScene extends BaseScene {
 
   protected onEnter(ui: HTMLElement): void {
     this.busy = false;
+    // Label scene di kiri atas tidak dipakai di Briefing: tempatnya untuk tombol kembali ke menu utama.
+    document.body.classList.add('briefing-active');
     const { save, mode } = this.ctx.store.get();
     this.focus = 'overview';
     this.flyT = 1;
@@ -220,7 +222,7 @@ export class BriefingScene extends BaseScene {
   }
 
   protected override onExit(): void {
-    document.body.classList.remove('title-active');
+    document.body.classList.remove('title-active', 'briefing-active');
     this.title = null;
     this.titleButtons = [];
     this.menu = null;
@@ -369,9 +371,22 @@ export class BriefingScene extends BaseScene {
     info.appendChild(keys);
 
     stage.append(arrow(-1, 'prev', STORY_UI.prevDestination), info, arrow(1, 'next', STORY_UI.nextDestination));
-    menu.append(top, stage);
+    const back = el('button', 'ms-back', STORY_UI.backToTitle);
+    back.type = 'button';
+    back.addEventListener('click', () => this.backToTitle(ui));
+    menu.append(back, top, stage);
     ui.appendChild(menu);
     this.menu = menu;
+  }
+
+  /** Kembali dari karusel ke menu utama; kamera terbang balik ke tampilan tata surya. */
+  private backToTitle(ui: HTMLElement): void {
+    if (this.busy || !this.menu) return;
+    this.menu.remove();
+    this.menu = null;
+    this.focus = 'overview';
+    this.startFlight();
+    this.showTitle(ui);
   }
 
   /** Geser karusel `delta` langkah (tanpa memutar dari ujung ke ujung). */
@@ -418,9 +433,12 @@ export class BriefingScene extends BaseScene {
     const left = input.consumePressed('ArrowLeft') || input.consumePressed('KeyA');
     const right = input.consumePressed('ArrowRight') || input.consumePressed('KeyD');
     const enter = input.consumePressed('Enter') || input.consumePressed('NumpadEnter');
+    // Esc saat panel Pengaturan terbuka hanya menutup panel itu.
+    const esc = input.consumePressed('Escape') && !document.querySelector('.settings.open');
     const ui = this.ui;
     if (this.busy || !this.menu || !ui) return;
-    if (left) this.step(ui, -1);
+    if (esc) this.backToTitle(ui);
+    else if (left) this.step(ui, -1);
     else if (right) this.step(ui, 1);
     else if (enter) this.startBriefing(ui, this.destinations[this.index].id);
   }

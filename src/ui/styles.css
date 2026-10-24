@@ -126,6 +126,7 @@ html, body {
   color: #bae6fd;
 }
 #scene-hint:empty { display: none; }
+body.briefing-active #scene-label { display: none; }
 
 /* --- Lapisan Scene & Panel Kartu (Clay / Soft 3D) --- */
 .scene-ui { position: absolute; inset: 0; pointer-events: none; }
@@ -1761,6 +1762,42 @@ button.launch-button.about-close::before { content: none; }
 
 /* --- Menu karusel pilih tujuan: planet 3D besar di tengah, nama + Mulai di bawah, panah di tepi --- */
 .mission-select { position: absolute; inset: 0; pointer-events: none; }
+/* Tombol kembali ke menu utama, di tempat label scene (kiri atas). */
+button.ms-back {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 9px 18px 9px 14px;
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e0f2fe;
+  background: linear-gradient(160deg, #1e3a8a, #172554);
+  border: 2px solid rgba(125, 211, 252, 0.6);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 4px 0 #0b1437, 0 8px 18px rgba(0, 0, 0, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.22);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: ui-enter 220ms ease-out both;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s, border-color 0.15s;
+}
+button.ms-back::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-left: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  border-radius: 2px;
+  transform: translateX(2px) rotate(45deg);
+}
+button.ms-back:hover { transform: translateY(-2px); border-color: #e0f2fe; box-shadow: 0 6px 0 #0b1437, 0 12px 22px rgba(56, 189, 248, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.22); }
+button.ms-back:active { transform: translateY(2px); box-shadow: 0 1px 0 #0b1437, inset 0 2px 0 rgba(255, 255, 255, 0.22); }
+button.ms-back:focus-visible { outline: 3px solid #facc15; outline-offset: 3px; }
 .ms-top {
   position: absolute;
   top: 72px;
