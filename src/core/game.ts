@@ -60,7 +60,10 @@ export class Game {
     if (!overlay) throw new Error('Elemen #overlay tidak ditemukan');
     const ctx: GameContext = {
       renderer: this.renderer, canvas, overlay, store: this.store, input: this.input,
-      cursor: this.cursor, catalog: loadCatalog(), go: (id) => this.transition.request(id),
+      cursor: this.cursor, catalog: loadCatalog(), go: (id) => {
+        this.cursor.prepareSceneChange(id);
+        this.transition.request(id);
+      },
       openSettings: () => this.controls?.open(),
     };
     [createBriefingScene, createDesignScene, createFlightScene, createSurfaceScene, createReviewScene].forEach(

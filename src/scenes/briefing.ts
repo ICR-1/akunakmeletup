@@ -64,6 +64,9 @@ export class BriefingScene extends BaseScene {
   private titleDone = false;
   private title: HTMLElement | null = null;
   private titleAngle = 0;
+  /** Tombol menu utama dan indeks yang sedang disorot (panah/hover/Tab memindahkan sorotan yang sama). */
+  private titleButtons: HTMLButtonElement[] = [];
+  private titleSel = 0;
 
   constructor(ctx: GameContext) {
     super(ctx);
@@ -128,16 +131,22 @@ export class BriefingScene extends BaseScene {
     const head = el('div', 'title-head');
     head.append(createLogo(TITLE_UI.logo, !reducedMotion()), el('div', 'title-subtitle', TITLE_UI.subtitle), el('p', 'title-tagline', TITLE_UI.tagline));
     const nav = el('nav', 'title-menu');
+    this.titleButtons = [];
     const item = (cls: string, label: string, onClick: () => void): HTMLButtonElement => {
       const b = el('button', `title-btn ${cls}`, label);
       b.type = 'button';
+      const i = this.titleButtons.length;
+      this.titleButtons.push(b);
       b.addEventListener('click', onClick);
+      b.addEventListener('mouseenter', () => this.selectTitle(i));
+      b.addEventListener('focus', () => this.selectTitle(i));
       nav.appendChild(b);
       return b;
     };
     item('launch-button title-play', TITLE_UI.play, () => this.leaveTitle(ui));
     item('title-secondary title-settings', TITLE_UI.settings, () => this.ctx.openSettings());
     item('title-secondary title-info', TITLE_UI.about, () => this.showAbout(screen));
+    this.selectTitle(0);
     const keys = el('div', 'title-keys');
     renderKeyHints(keys, TITLE_UI.keys);
     screen.append(head, nav, keys, el('div', 'title-credit', TITLE_UI.credit));
@@ -182,7 +191,17 @@ export class BriefingScene extends BaseScene {
     this.continueToMenu(ui);
   }
 
-  /** Tombol layar judul: ↑/↓ pindah fokus antar-tombol, Enter tanpa fokus = Main, Esc menutup Tentang. */
+  /** Sorot tombol menu utama ke-`i`; bila fokus keyboard sedang di salah satu tombol, fokus ikut pindah. */
+  private selectTitle(i: number): void {
+    const buttons = this.titleButtons;
+    if (buttons.length === 0) return;
+    this.titleSel = (i + buttons.length) % buttons.length;
+    buttons.forEach((b, k) => b.classList.toggle('is-selected', k === this.titleSel));
+    const focused = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (focused >= 0 && focused !== this.titleSel) buttons[this.titleSel].focus();
+  }
+
+  /** Tombol layar judul: ↑/↓ atau W/S memindahkan sorotan, Enter membuka yang disorot, Esc menutup Tentang. */
   private handleTitleKeys(screen: HTMLElement): void {
     const input = this.ctx.input;
     const up = input.consumePressed('ArrowUp') || input.consumePressed('KeyW');
@@ -194,16 +213,16 @@ export class BriefingScene extends BaseScene {
       if (esc) about.remove();
       return;
     }
-    const buttons = [...screen.querySelectorAll<HTMLButtonElement>('.title-menu .title-btn')];
-    const at = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    if (up || down) buttons[(at < 0 ? 0 : at + (down ? 1 : -1) + buttons.length) % buttons.length]?.focus();
-    // Enter pada tombol yang fokus sudah memicu klik bawaan browser.
-    else if (enter && at < 0 && this.ui) this.leaveTitle(this.ui);
+    if (up) this.selectTitle(this.titleSel - 1);
+    else if (down) this.selectTitle(this.titleSel + 1);
+    // Enter pada tombol yang sedang fokus (Tab) sudah memicu klik bawaan browser.
+    else if (enter && !this.titleButtons.includes(document.activeElement as HTMLButtonElement)) this.titleButtons[this.titleSel]?.click();
   }
 
   protected override onExit(): void {
     document.body.classList.remove('title-active');
     this.title = null;
+    this.titleButtons = [];
     this.menu = null;
     this.orrery?.dispose();
     this.orrery = null;
