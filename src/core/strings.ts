@@ -18,6 +18,10 @@ export const LOADING_UI = {
   title: 'Memuat ASTRA',
   subtitle: 'Menyiapkan semua bahan misi sebelum peluncuran',
   done: 'Siap',
+  ready: 'Semua sistem GO, siap meluncur',
+  checks: ['Navigasi', 'Propulsi', 'Komunikasi', 'Sains'],
+  standby: 'Siaga',
+  go: 'GO',
   failed: 'Sebagian bahan gagal dimuat; permainan tetap dilanjutkan.',
   planetLabel: 'Tekstur benda langit',
   planets: {
