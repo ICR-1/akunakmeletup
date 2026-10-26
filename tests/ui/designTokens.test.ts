@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const raw = readFileSync(resolve(__dirname, '../../src/ui/styles.css'), 'utf8');
+const dir = fileURLToPath(new URL('.', import.meta.url));
+const raw = readFileSync(resolve(dir, '../../src/ui/styles.css'), 'utf8');
 // Buang blok :root pertama (tempat token didefinisikan).
-const css = raw.replace(/:root\s*\{[\s\S]*?\n\}/, '');
+const css = raw.replace(/:root\s*\{[\s\S]*?\r?\n\}/, '');
 
 const ALLOWED = /^(var\(--r-[a-z0-9]+\)|var\(--radius-[a-z]+\)|inherit|50%|0|1px|2px)$/;
 
@@ -14,7 +16,7 @@ describe('token desain CSS', () => {
   });
   it('border-radius hanya token, 50%, 0, atau ≤2px', () => {
     const decls = [...css.matchAll(/border-radius:\s*([^;}]+)/g)].map((m) => m[1].trim());
-    const bad = decls.filter((v) => !v.replace(/\s*!important$/, '').split(/\s+/).every((p) => ALLOWED.test(p)));
+    const bad = decls.filter((v) => !v.replace(/\s*!important$/, '').split(/\s+/).every((p: string) => ALLOWED.test(p)));
     expect(bad).toEqual([]);
   });
   it('aturan [hidden] global ada', () => {

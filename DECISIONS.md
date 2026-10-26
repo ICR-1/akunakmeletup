@@ -339,6 +339,7 @@ Game web 3D low-poly (TypeScript strict + Vite + Three.js) tempat pemain meranca
     - b. **Lintasan progres:** logo roket tim (gambar yang sudah ada sejak integrasi `pp.jpg`, tidak ada berkas baru) berada di ujung isi dan bergetar seperti mesin menyala. Di belakangnya ada jejak asap lembut yang memudar ke ekor. Ada tanda di 25/50/75%. Saat pemuatan selesai, roket melesat keluar layar lalu layar memudar.
     - c. **Poll GO/NO-GO:** Navigasi, Propulsi, Komunikasi, dan Sains berstatus "Siaga" (kuning berkedip) lalu berubah menjadi "GO" hijau tiap seperempat progres (`checksDone`, murni dan teruji). Ini hanya nuansa pusat kendali, bukan pemetaan ke langkah pemuatan tertentu.
     - d. **Latar:** tiga lapis bintang yang mengalir ke bawah (kesan roket naik), dan cakrawala Bumi dengan pendar atmosfer. Semuanya CSS, dan bila pengguna memilih gerak dikurangi, semua animasi berhenti.
+146. **Layar memuat lebih sederhana (permintaan pemilik proyek):** menggantikan 145b dan 145c. Roket tim, jejak asap, dan tanda 25/50/75% dibuang dari lintasan progres sehingga tinggal bilah tipis bergradasi biru. Poll GO/NO-GO beserta `checksDone` dan tesnya juga dibuang. Logo, persentase, langkah yang sedang dimuat, dan latar (145d) tetap.
 ## Ide (tidak diimplementasikan)
 - Kontrol yang bisa diatur ulang (aksesibilitas penuh).
 - Pohon upgrade yang membelanjakan poin sains.
