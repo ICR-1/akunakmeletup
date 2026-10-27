@@ -9,3 +9,5 @@ ui-audit/
 graphify-out/
 mainm.png
 .commandcode/
+.vercel
+.env*
